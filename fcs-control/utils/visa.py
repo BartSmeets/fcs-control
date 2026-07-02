@@ -15,11 +15,20 @@ def get_resource_manager():
     return _rm
 
 
+def get_resources(port_name):
+    """
+    Get resources that match a given port.
 
-def identify_resource(resource_name):
+    Parameters
+    ----------
+    port: str
+        Port name
+
+    Returns
+    -------
+    resources: list
+        List of resources
+    
     """
-    Open a VISA resource and query *IDN?
-    """
-    instrument = _rm.open_resource(resource_name)
-    idn = instrument.query("*IDN?")
-    return instrument, idn
+    resources = [port for port in get_resource_manager().list_resources() if port_name in port]
+    return resources

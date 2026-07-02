@@ -10,7 +10,7 @@ from struct import unpack
 import numpy as np
 import pyvisa
 from config import CHANNEL, HARDWARE
-from utils.visa import get_resource_manager, identify_resource
+from utils.visa import get_resource_manager, get_resources
 
 _logger = logging.getLogger(__name__)
 
@@ -101,18 +101,22 @@ class Scope:
 
         port: str
             Port of the scope found.
-        '''
-        # List comprehension to find all strings containing the port number
-        resources = [port for port in get_resource_manager().list_resources() if port_name in port]
         
+        '''
+        resources = get_resources(port_name)
+        
+        def _identify_resource(resource_name):
+            instrument = get_resource_manager().open_resource(resource_name)
+            idn = instrument.query("*IDN?")
+            return instrument, idn
+
         if not resources:
-            _logger.error(f"No ports named {port_name} found.")
-            raise ValueError("No ports named " + port_name + " found.")
+            raise NameError("No ports named " + port_name + " found.")
 
         if len(resources) == 1: # If only one occurence is found, update foundport
             found_port = str(resources[0])
             # Check if serial number matches
-            visa_resource, idn = identify_resource(found_port)
+            visa_resource, idn = _identify_resource(found_port)
 
             if serial_number in idn:
                 _logger.info(f"The scope with serial number {serial_number} was found")
@@ -130,7 +134,7 @@ class Scope:
             ## Try if any of the ports matches the serial number
             for resource in resources:  
                 try:
-                    visa_resource, idn = identify_resource(found_port)
+                    visa_resource, idn = _identify_resource(found_port)
                     
                     if serial_number in idn:                    
                         _logger.info(f"The scope with serial number {serial_number} was found")
