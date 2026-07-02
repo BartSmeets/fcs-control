@@ -18,6 +18,31 @@ class Scope:
     """
     MDO34 Scope object
 
+    Attributes
+    ----------
+        visa_resource: obj
+            VISA object for scope
+
+        sn: str
+            Serial number of the scope found.
+
+        port: str
+            Port of the scope found.
+    
+    Methods
+    -------
+    read: read data from scope
+
+    runstop: run or stop the scope
+
+    set_micpdiv: set the horizontal scale
+
+    get_micpdiv: get the horizontal scale
+
+    set_samplemode: set scope to sample mode
+
+    set_numavg: set number of shots per read
+
     """
     def __init__(self, prisec):
         """
@@ -28,6 +53,16 @@ class Scope:
         prisec: str
             "primary" or "secondary" scope?
 
+        Attributes
+        ----------
+        visa_resource: obj
+            VISA object for scope
+
+        sn: str
+            Serial number of the scope found.
+
+        port: str
+            Port of the scope found.
         """
         # Connect Scope
         sn = HARDWARE.scope[prisec].serial_number   # configchn.get("PORTS", SN)
