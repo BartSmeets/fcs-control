@@ -1,0 +1,13 @@
+[qswitch_delay_us]
+right_laser = 226.50   # skimmer side, "Big YAGS" value
+left_laser = 152.20    # PSV side, minilite value
+opo_opa_max_power = 307    # ~600 mJ/pulse, absolute max
+opo_opa_low_power = 410    # ~210 mJ/pulse
+
+opo_opa_offset = 0.43
+# Difference between set Q-switch delay and measured power-sensor light,
+# used when tuning Q-switch delay to manipulate power.
+
+[valve_delay_us]
+psv = 486.0
+ion_trap = 0.0   # not yet measured
