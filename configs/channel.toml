@@ -20,6 +20,11 @@ rf_probe = "CH4"
 [scope.secondary]
 rtof = "CH1"
 trigger = "CH2"
+mcp_bended_left = "CH3"     
+mcp_ltof = "CH3"
+current_measure = "CH4"     
+mcp_inj_side = "CH4"
+rf_probe = "CH4"
 
 [qbs]
 ip = 1            # Inner pole (right bend) / outer pole (left bend)

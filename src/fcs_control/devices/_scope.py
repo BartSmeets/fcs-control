@@ -9,8 +9,9 @@ from struct import unpack
 
 import numpy as np
 import pyvisa
-from config import CHANNEL, HARDWARE
-from utils.visa import get_resource_manager, get_resources
+
+from ..config import CHANNEL, HARDWARE
+from ..utils.visa import get_resource_manager, get_resources
 
 _logger = logging.getLogger(__name__)
 

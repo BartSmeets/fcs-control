@@ -8,8 +8,8 @@ __all__ = ["Quantum"]
 import logging
 import string
 
-from config import HARDWARE
-from utils.visa import get_resource_manager, get_resources
+from ..config import HARDWARE
+from ..utils.visa import get_resource_manager, get_resources
 
 _LETTER_LIST = string.ascii_uppercase[:8]
 _ONOFF_LIST = ["OFF", "ON"]
