@@ -43,6 +43,10 @@ class Quantum:
 
         Methods
         -------
+        connect: connect device
+
+        disconnect: disconnect device
+
         set_delay: set delay
 
         set_mode: set operation mode
@@ -69,7 +73,7 @@ class Quantum:
 
         """
         # Connect
-        self.visa_resource, self.port = self._connect()
+        self.visa_resource, self.port = self.connect()
         _logger.info(f"Connected to Quantum 9520 at port {self.port}")
         
         # Read settings
@@ -79,7 +83,7 @@ class Quantum:
         self.settings = settings
 
     
-    def _connect(self):
+    def connect(self):
         """
         Connect to Quantum delay generator.
 
@@ -117,6 +121,14 @@ class Quantum:
         visa_resource.write(':DISP:MOD ON')
 
         return visa_resource, found_port
+    
+
+    def disconnect(self):
+        """
+        Disconnect the Quantum delay generator
+        """
+        self.visa_resource.close()
+        _logger.info(f"The Quantum delay generator on port {self.port} was disconnected")
 
 
     def set_delay(self, channel, dtime):

@@ -32,6 +32,10 @@ class Scope:
     
     Methods
     -------
+    connect: connect device
+
+    disconnect: disconnect device
+
     read: read data from scope
 
     runstop: run or stop the scope
@@ -69,7 +73,7 @@ class Scope:
         sn = HARDWARE.scope[prisec].serial_number   # configchn.get("PORTS", SN)
         port = HARDWARE.scope[prisec].visa_port
         
-        self.visa_resource, self.sn, self.port = self._connect(port,sn)
+        self.visa_resource, self.sn, self.port = self.connect(port,sn)
         _logger.info(f"Using scope at port {self.port} "
                      f"with SN: {self.sn}")
         
@@ -81,7 +85,7 @@ class Scope:
         self.visa_resource.write(':HEAD 0')  # Header off
 
 
-    def _connect(self, port_name, serial_number):
+    def connect(self, port_name, serial_number):
         '''
         Checks if scope is available: returns the scope object, serial number and port if it is.
 
@@ -154,6 +158,14 @@ class Scope:
                     And since there are multiple scopes connected, I cannot just act like I don't care and connect to another scope.
                     """
                 )
+
+
+    def disconnect(self):
+        """
+        Disconnect the scope
+        """
+        self.visa_resource.close()
+        _logger.info(f"The scope with serial number {self.sn} was disconnected")
 
 
     def read(self, channel):

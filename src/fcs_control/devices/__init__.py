@@ -1,4 +1,3 @@
-from ._quantum import Quantum
-from ._scope import Scope
+from ._device_manager import DeviceManager
 
-__all__ = ['Quantum', 'Scope']
+__all__ = ['DeviceManager']
