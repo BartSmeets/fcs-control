@@ -21,14 +21,14 @@ class Scope:
 
     Attributes
     ----------
-        visa_resource: obj
-            VISA object for scope
+    visa_resource: obj
+        VISA object for scope
 
-        sn: str
-            Serial number of the scope found.
+    sn: str
+        Serial number of the scope found.
 
-        port: str
-            Port of the scope found.
+    port: str
+        Port of the scope found.
     
     Methods
     -------
@@ -83,7 +83,6 @@ class Scope:
         self.visa_resource.write('HORizontal:DELay:MODe OFF')    # No horizontal delay
         self.visa_resource.write('HORizontal:POSition 10')   # Horizontal position in %
         self.visa_resource.write(':HEAD 0')  # Header off
-
 
     def connect(self, port_name, serial_number):
         '''
@@ -159,14 +158,12 @@ class Scope:
                     """
                 )
 
-
     def disconnect(self):
         """
         Disconnect the scope
         """
         self.visa_resource.close()
         _logger.info(f"The scope with serial number {self.sn} was disconnected")
-
 
     def read(self, channel):
         """
@@ -217,7 +214,6 @@ class Scope:
 
         return data
 
-
     def runstop(self, runstop):
         """
         Runs or stops the scope depending on the command
@@ -235,7 +231,6 @@ class Scope:
         else:
             raise ValueError(f"{runstop} is not a valid command. It's either ``run`` or ``stop``.")
         
-
     def set_micpdiv(self, micpdiv):
         """
         Set the horizontal time scale in µs/div
@@ -247,7 +242,6 @@ class Scope:
         
         """
         self.visa_resource.write(f':HOR:SCA {str(micpdiv)}E-6')
-
 
     def get_micpdiv(self):
         """
@@ -263,14 +257,12 @@ class Scope:
         micpdiv = float(micpdiv)*1.e6 # s to us
         return micpdiv
 
-
     def set_samplemode(self):
         '''
         Set scope to manual mode
         
         '''
         self.visa_resource.write(':ACQUIRE:MODE SAMPLE')
-
 
     def set_numavg(self, average):
         """

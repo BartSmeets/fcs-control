@@ -7,10 +7,7 @@ _rm = pyvisa.ResourceManager()
 def get_resource_manager():
     """
     Get the resource manager, duh...
-
-    Returns
-    -------
-    the resourcemanager...
+    
     """
     return _rm
 

@@ -82,7 +82,6 @@ class Quantum:
             settings[letter] = self.get_all(letter)
         self.settings = settings
 
-    
     def connect(self):
         """
         Connect to Quantum delay generator.
@@ -122,14 +121,12 @@ class Quantum:
 
         return visa_resource, found_port
     
-
     def disconnect(self):
         """
         Disconnect the Quantum delay generator
         """
         self.visa_resource.close()
         _logger.info(f"The Quantum delay generator on port {self.port} was disconnected")
-
 
     def set_delay(self, channel, dtime):
         """
@@ -152,7 +149,6 @@ class Quantum:
         self.visa_resource.query("*OPC?")
 
         _logger.info(f"Delay of CH{channel} on Quantum ({self.port}) is set to {dtime:.2f} µs")
-
 
     def set_mode(self, channel, mode):
         '''
@@ -180,7 +176,6 @@ class Quantum:
 
         _logger.info(f"CH{channel} on Quantum ({self.port}) has been set to mode {mode}")
 
-
     def set_reference(self, channel, channel_ref):
         """
         Set reference of specified channel
@@ -207,7 +202,6 @@ class Quantum:
 
         _logger.info(f"Reference of CH{channel} on Quantum ({self.port}) is set to {ref_string}")
 
-
     def set_width(self, channel, dtime):
         """
         Set width of specified channel
@@ -230,7 +224,6 @@ class Quantum:
         
         _logger.info(f"Width of CH{channel} on Quantum ({self.port}) is set to {dtime:.2f} µs")
     
-    
     def get_delay(self, channel):
         """
         Get delay of specified channel
@@ -252,7 +245,6 @@ class Quantum:
         delay *= 1e6
         return delay
 
-
     def get_mode(self, channel):
         '''
         Get mode of delay generator
@@ -272,7 +264,6 @@ class Quantum:
 
         mode = self.visa_resource.write(f':PULSE{channel_num}:CMOD?')
         return mode
-
 
     def get_reference(self, channel):
         """
@@ -294,7 +285,6 @@ class Quantum:
         channel_ref = self.visa_resource.write(f':PULSE{channel_num}:SYNC?')
         return channel_ref
 
-
     def get_width(self, channel):
         """
         Set width of specified channel
@@ -313,7 +303,6 @@ class Quantum:
         width = float(self.visa_resource.write(f":PULSE{channel_num}:WIDTH?"))
         width *= 1e6
         return width
-
 
     def get_all(self, channel):
         """
@@ -343,7 +332,6 @@ class Quantum:
         }
         return settings
 
-
     def onoff(self, channel, onoff):#Turn a channel on or off
         '''
         Turn a channel on/off
@@ -364,7 +352,6 @@ class Quantum:
 
         _logger.info(f"CH{channel} on Quantum ({self.port}) has been switched {_ONOFF_LIST[onoff]}")
 
-
     def t0_normal(self):
         '''
         Makes sure the t0 is not in duty cycle
@@ -372,7 +359,6 @@ class Quantum:
         '''
         self.visa_resource.write(':PULSE0:MOD NORM')
         self.visa_resource.query("*OPC?")
-
 
     def runstop(self, runstop):
         '''
