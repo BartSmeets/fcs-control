@@ -1,0 +1,5 @@
+[psv]
+internal_delay_us = 486.0
+
+[ion_trap]
+internal_delay_us = 0.0

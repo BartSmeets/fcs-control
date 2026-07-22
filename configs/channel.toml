@@ -1,0 +1,49 @@
+[quantum9520]
+psv = "A"
+lamp_right_laser = "B"   # skimmer side
+lamp_left_laser = "C"    # PSV side
+extraction = "D"
+trigger_scope_primary = "E"
+trigger_scope_secondary = "F"
+trigger_opo_lamp = "G"
+trigger_opo_qswitch = "H"
+
+[scope.primary]
+rtof = "CH1"
+trigger = "CH2"
+mcp_bended_left = "CH3"     # same physical channel as mcp_ltof
+mcp_ltof = "CH3"
+current_measure = "CH4"     # aka faraday cup; same physical channel as below
+mcp_inj_side = "CH4"
+rf_probe = "CH4"
+
+[scope.secondary]
+rtof = "CH1"
+trigger = "CH2"
+mcp_bended_left = "CH3"     
+mcp_ltof = "CH3"
+current_measure = "CH4"     
+mcp_inj_side = "CH4"
+rf_probe = "CH4"
+
+[qbs]
+ip = 1            # Inner pole (right bend) / outer pole (left bend)
+del123 = 2        # Deflector Exit Lens 1,2,3
+eel2 = 3          # Entrance Einzel Lens 2
+eel13 = 4         # Entrance Einzel Lens 1,3
+exel13 = 5        # Exit Einzel Lens 1,3
+dtbp = 6          # Deflector top/bottom plate
+exel2 = 7         # Exit Einzel Lens 2
+del_entrance = 9  # Deflector entrance lens (renamed from "del" — reserved word in Python)
+op = 10           # Outer pole (right bend) / outer pole (left bend)
+
+[qmfl]
+velscan = 1
+qel = 2           # Quad Entrance Lens
+qpf = 3
+qexl = 4          # Quad Exit Lens
+qexel1 = 5        # Quad Exit Einzel Lens 1
+qexel2 = 6
+qexel3 = 7
+itssel = 9        # Ion Trap Source Side Einzel Lens
+itrsel = 10       # Ion Trap Ring Side Einzel Lens

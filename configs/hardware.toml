@@ -1,0 +1,44 @@
+[scope.primary]
+visa_port = "USB0"
+serial_number = "C019998"
+
+[scope.secondary]
+visa_port = "USB0"
+serial_number = "C015331"
+
+[quantum9520]
+port = "ASRL9"
+
+[dg535.del3]
+gpib_address = 3
+
+[dg535.del5]
+gpib_address = 5
+
+[qbs]
+port = "ASRL14"
+
+[qmfl]
+port = "ASRL11"
+
+[esi_ps]
+port = "ASRL19"
+
+[fug.injection]
+port = "ASRL5"
+
+[fug.storage_ring_1]
+port = "ASRL4"
+
+[fug.storage_ring_2]
+port = "ASRL8"
+
+[fug.storage_ring_3]
+port = "ASRL13"
+
+[fug.storage_ring_4]
+port = "ASRL16"
+
+[laser_vision]
+port = 1315
+# ip_address comes from .env, not here
