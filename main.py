@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from fcs_control.devices import get_device_manager
-from fcs_control.gui import MenuBar, logPanel, voltagePanel
+from fcs_control.gui import LogPanel, MenuBar, VoltagePanel
 
 
 class MainWindow(QMainWindow):
@@ -23,17 +23,18 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("FCS: Free Cluster Setup")
 
         layout = QHBoxLayout()
-        layout.addWidget(logPanel(self))
-        layout.addWidget(voltagePanel())
+        layout.addWidget(LogPanel(self))
+        layout.addWidget(VoltagePanel())
+
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
         
         self.device_manager = get_device_manager()
         
         self.menu_bar = MenuBar(self.device_manager, self)
         self.setMenuBar(self.menu_bar)
 
-        widget = QWidget()
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
 
 app = QApplication([])
 

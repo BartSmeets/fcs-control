@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QPlainTextEdit
 from fcs_control.utils.logging import QTextEditHandler
 
 
-class logPanel(QPlainTextEdit):
+class LogPanel(QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
