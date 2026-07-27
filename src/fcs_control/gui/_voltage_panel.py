@@ -13,6 +13,7 @@ class VoltagePanel(QWidget):
         super().__init__(parent)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         self.voltages = ParameterGroup("Voltages", [
             # Observable, dtype, maximum, unit, default
@@ -34,7 +35,7 @@ class VoltagePanel(QWidget):
         ])
         layout.addWidget(self.misc)
 
-    def values(self):
+    def get_voltages(self):
         values = {}
         values.update(self.voltages.values())
         values.update(self.misc.values())

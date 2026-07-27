@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from fcs_control.devices import get_device_manager
-from fcs_control.gui import LogPanel, MenuBar, VoltagePanel
+from fcs_control.gui import LogPanel, MaterialPanel, MenuBar, VoltagePanel
 
 
 class MainWindow(QMainWindow):
@@ -24,7 +24,8 @@ class MainWindow(QMainWindow):
 
         layout = QHBoxLayout()
         layout.addWidget(LogPanel(self))
-        layout.addWidget(VoltagePanel())
+        layout.addWidget(VoltagePanel(self))
+        layout.addWidget(MaterialPanel(self))
 
         widget = QWidget()
         widget.setLayout(layout)
