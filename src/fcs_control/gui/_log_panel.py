@@ -1,3 +1,7 @@
+"""
+Builds the panel that reads the logs (from INFO level)
+
+"""
 import logging
 
 from PySide6.QtWidgets import QPlainTextEdit
@@ -6,18 +10,22 @@ from fcs_control.utils.logging import QTextEditHandler
 
 
 class LogPanel(QPlainTextEdit):
+    """
+    Main log panel
+
+    Prints the logs in `%(asctime)s [%(levelname)s] %(name)s: %(message)s` format
+
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
 
         # Logging setup
         self.log_handler = QTextEditHandler()
-
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
         )
         self.log_handler.setFormatter(formatter)
-
         self.log_handler.emitter.log_message.connect(
             self.append_log
         )
