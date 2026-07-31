@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 # ====================
 # Registry: Add new delay generators and their available channels here
+# Don't forget to wire the device_manager in `_DelayGenBox.refresh()`
 # ====================
 _CONNECTED_GENERATORS  = {
     'Quantum 9520': ["A", "B", "C", "D", "E", "F", "G", "H"],
