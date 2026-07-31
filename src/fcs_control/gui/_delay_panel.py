@@ -32,13 +32,8 @@ class DelayPanel(QGroupBox):
     """
     Main delay generator panel
     
-    Methods
-    -------
-    get_settings: 
-        returns settings dictionary.
-
-    refresh: 
-        refresh the panel values by reading from the devices
+    Aggregates one `_DelayGenBox` per generator listed in
+    `_CONNECTED_GENERATORS`, arranged side by side.
     
     """
     def __init__(self, device_manager, parent=None):
@@ -58,13 +53,10 @@ class DelayPanel(QGroupBox):
         """
         Returns
         ------- 
-        settings dict:
-            Keys: 
-                names of the delay generators.
-
-            Values:
-                Setting_dict from that delay generator, 
-                see `_DelayGenBox.get_settings()`
+        dict[str, dict]
+            Keys are names of the delay generators.
+            Values are setting_dicts from that delay generator, 
+            see `_DelayGenBox.get_settings()`
         
         """
         return {
@@ -73,19 +65,18 @@ class DelayPanel(QGroupBox):
 
     def refresh(self):
         """
-        Refreshes values by reading device
-
+        Refreshes values by reading device. 
         See `_DelayGenBox.refresh()`
         
         """
-        for box in self.boxes:
+        for box in self.boxes.values():
             box.refresh()
 
 
 @dataclass
 class _ChannelWidgets:
     """
-    Class to collect settings per channel
+    Class to collect settings (delay and reference) per channel
     
     """
     delay: QDoubleSpinBox
@@ -96,14 +87,6 @@ class _DelayGenBox(QGroupBox):
     """
     Builds panel for individual delay generator
 
-    Methods
-    -------
-    refresh: 
-        refreshes values by reading device
-
-    get_settings:
-        returns settings dictionary.
-
     """
     def __init__(self, name, device_manager, parent=None):
         super().__init__(name, parent)
@@ -113,9 +96,8 @@ class _DelayGenBox(QGroupBox):
         self.name = name
         self.channels = _CONNECTED_GENERATORS[name]
 
-        # Dictionaries for storing input boxes
-        self.delays = {}
-        self.refs = {}
+        # Dictionary for storing channel widgets
+        self.channels_widgets = {}
 
         # Build UI and initialise values
         self._build_ui()
@@ -126,9 +108,6 @@ class _DelayGenBox(QGroupBox):
         Build UI of panel
         
         """
-        # Dictionary for storing channel widgets
-        self.channels_widgets = {}
-
         # Layout configs
         layout = QGridLayout(self)
         layout.setAlignment(Qt.AlignTop)
@@ -178,7 +157,7 @@ class _DelayGenBox(QGroupBox):
         if self.name == 'Quantum 9520':
             device = self.device_manager.quantum
         elif self.name == 'Stanford DG535':
-            _logger.warning(f"{self.name} refresh not yet implemented") ## Not yet implemented!!
+            _logger.warning(f"{self.name} refresh not yet implemented") # TODO: connect stanford device
             return
         else:
             raise ValueError(f"Unknown generator: {self.name}")
@@ -207,17 +186,14 @@ class _DelayGenBox(QGroupBox):
         """
         Returns
         ------- 
-        settings dict:
-            Keys: 
-                channel name (letter)
-        
-            Values:
-                dict {'delay': delay value, 'reference': reference value} 
+        dict[str, dict]
+            Keys are channel names (letters). 
+            Values are dicts with
+            'delay' (float) and 'reference' (str).
         
         """
         return {
-            ch: {'delay': self.delays[ch].value(), 
-                 'reference': self.refs[ch].currentText()}
-            for ch in self.channels
+            ch: {'delay': w.delay.value(), 'reference': w.ref.currentText()}
+            for ch, w in self.channels_widgets.items()
         }
             
