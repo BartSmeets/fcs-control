@@ -35,7 +35,7 @@ class VoltagePanel(QWidget):
         ])
         layout.addWidget(self.misc)
 
-    def get_voltages(self):
+    def get_settings(self):
         values = {}
         values.update(self.voltages.values())
         values.update(self.misc.values())
@@ -58,6 +58,8 @@ class ParameterGroup(QGroupBox):
                 box = QSpinBox()
                 box.setMaximum(2147483647)
 
+            box.setFixedWidth(120)
+
             if maximum is not None:
                 box.setMaximum(maximum)
             box.setSuffix(f" {unit}")
@@ -66,7 +68,7 @@ class ParameterGroup(QGroupBox):
             self.spinboxes[name] = box
             layout.addRow(f"{name} = ", box)
 
-    def values(self):
+    def get_settings(self):
         return {
             name: widget.value()
             for name, widget in self.spinboxes.items()

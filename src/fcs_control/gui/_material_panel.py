@@ -60,7 +60,7 @@ class MaterialPanel(QGroupBox):
             if item.widget():
                 item.widget().deleteLater()
 
-    def get_elements(self):
+    def get_settings(self):
         return [
             box.currentText()
             for box in self.elements
