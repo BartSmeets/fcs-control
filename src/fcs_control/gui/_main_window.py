@@ -1,3 +1,8 @@
+"""
+Builds the Main Window
+
+"""
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -13,6 +18,12 @@ from ._voltage_panel import VoltagePanel
 
 
 class MainWindow(QMainWindow):
+    """
+    Builds the main window.
+
+    Combines `LogPanel`, `VoltagePanel`, `MaterialPanel`, and `DelayPanel`.
+
+    """
     def __init__(self):
         super().__init__()
 
@@ -22,7 +33,7 @@ class MainWindow(QMainWindow):
 
         # Panels
         layout.addWidget(LogPanel(self))
-        self.device_manager = get_device_manager()  # Load device manager after logpanel to add to log
+        self.device_manager = get_device_manager()  # Load device manager after logpanel to add to log already
 
         layout.addWidget(VoltagePanel(self))
         layout.addWidget(MaterialPanel(self))
