@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(VoltagePanel(self))
         layout.addWidget(MaterialPanel(self))
-        layout.addWidget(DelayPanel(self.device_manager, self))
+        layout.addWidget(DelayPanel(self))
 
         # Cobined Panels as Widget
         widget = QWidget()
@@ -45,5 +45,5 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
         # Menu Bar
-        self.menu_bar = MenuBar(self.device_manager, self)
+        self.menu_bar = MenuBar(self)
         self.setMenuBar(self.menu_bar)

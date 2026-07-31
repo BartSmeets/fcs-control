@@ -5,6 +5,8 @@ Build MenuBar
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenuBar
 
+from ..devices import get_device_manager
+
 
 class MenuBar(QMenuBar):
     """
@@ -13,10 +15,10 @@ class MenuBar(QMenuBar):
     Contains: devices menu
 
     """
-    def __init__(self, device_manager, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.device_manager = device_manager
+        self.device_manager = get_device_manager()
 
         self.device_menu = self.addMenu("Devices")
         self.update_list()

@@ -84,7 +84,7 @@ class _DeviceManager:
 
                 _logger.info(f"{key} successfully connected")
 
-            except Exception as e:
+            except Exception as e: # noqa: BLE001
                 info["instance"] = None
                 _logger.warning(f"{key} not connected: {e}")
 
