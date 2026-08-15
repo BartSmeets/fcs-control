@@ -17,6 +17,7 @@ class VoltagePanel(QWidget):
     VoltagePanel.
 
     Also includes misc settings.
+    
     """
     def __init__(self, parent=None):
         super().__init__(parent)

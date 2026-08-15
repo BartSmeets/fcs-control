@@ -152,7 +152,7 @@ class _DeviceManager:
             return False
         if not instance.is_alive():
             self.devices[key]["instance"] = None
-            _logger.warning(f"{key} connection lost")
+            _logger.warning(f"{key} has lost connection at some point.")
             return False
         return True
 
