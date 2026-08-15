@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QSpacerItem,
 )
 
-from ..devices import get_device_manager
 from ..experiments import EXPERIMENT_REGISTRY, Experiment, Parameter
 from .utils.parameter_widgets import build_widget
 
@@ -29,13 +28,9 @@ class ExperimentPanel(QGroupBox):
     DO NOT MAKE CHANGES HERE TO ADD AN EXPERIMENT!
     
     """
-    # Common Information
-    device_manager = get_device_manager()
-    active_experiment: type[Experiment] | None = None
-
     def __init__(self, parent=None):
         super().__init__("Experiment", parent)
-
+        
         self.exp_layout = QFormLayout(self)
         self.exp_layout.setAlignment(Qt.AlignTop)
 
