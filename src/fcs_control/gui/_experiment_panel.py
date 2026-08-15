@@ -1,14 +1,22 @@
+"""
+Build the experiment panel
+
+"""
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
     QGroupBox,
+    QLabel,
     QPushButton,
     QSizePolicy,
+    QSpacerItem,
 )
 
 from ..devices import get_device_manager
 from ..experiments import EXPERIMENT_REGISTRY, Experiment, Parameter
+from .utils.parameter_widgets import build_widget
 
 
 class ExperimentPanel(QGroupBox):
@@ -39,16 +47,15 @@ class ExperimentPanel(QGroupBox):
 
         # Experiment Parameters
         experiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
-        self.parameters = experiment().all_parameters
-        self.experiment_settings = _ExperimentParameters(self.parameters)
-
+        self.experiment_settings = _ExperimentParameters(experiment)
+        
         # Run Button
         self.run_btn = QPushButton("Run")
         self.run_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.run_btn.clicked.connect(self._on_run)
 
         # Build Panel
-        self.exp_layout.addRow("Experiment: ", self.experiment_combo)
+        self.exp_layout.addRow("Experiment: ", self.experiment_combo)  
         self.exp_layout.addRow(self.experiment_settings)
         self.exp_layout.addRow(self.run_btn)
         self.setLayout(self.exp_layout)
@@ -63,8 +70,7 @@ class ExperimentPanel(QGroupBox):
 
         """
         experiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
-        self.parameters = experiment().all_parameters
-        self.experiment_settings.set_experiment(self.parameters)
+        self.experiment_settings.set_experiment(experiment)
 
     def _on_run(self):
         """
@@ -80,21 +86,27 @@ class _ExperimentParameters(QFormLayout):
     Defines the sublayout where the user will provide the experiment specific parameters.
     
     """
-    def __init__(self, parameters: tuple[type[Parameter], ...], parent=None):
+    def __init__(self, experiment: type[Experiment], parent=None):
         super().__init__(parent)
+        
         self._widgets: dict[str, object] = {}   # Will store the information
-        self.set_experiment(parameters)
+        self.set_experiment(experiment)
 
-    def set_experiment(self, parameters: tuple[type[Parameter], ...]) -> None:
+    def set_experiment(self, experiment: type[Experiment]) -> None:
         """
         Build and add the widgets
         
         """
-        self._clear_rows()                              
+        parameters = experiment().all_parameters
+        description = experiment.description
+
+        self._clear_rows()
+        self.addRow(QLabel(description))      
+        self.addItem(QSpacerItem(0, 20, QSizePolicy.Minimum, QSizePolicy.Fixed))        
         for parameter in parameters:
-            widget = parameter.build_widget()
+            widget = build_widget(parameter)
             self._widgets[parameter.name] = widget
-            self.addRow(parameter.label, widget)        
+            self.addRow(f"{parameter.label}: ", widget)        
 
     def _clear_rows(self) -> None:
         """
