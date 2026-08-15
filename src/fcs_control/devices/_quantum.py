@@ -47,6 +47,8 @@ class Quantum:
 
         disconnect: disconnect device
 
+        is_alive: checks if device still responds
+
         set_delay: set delay
 
         set_mode: set operation mode
@@ -77,7 +79,7 @@ class Quantum:
         _logger.info(f"Connected to Quantum 9520 at port {self.port}")
         
         # Read settings
-        settings = dict()
+        settings = {}
         for letter in _LETTER_LIST:
             settings[letter] = self.get_all(letter)
         self.settings = settings
@@ -128,6 +130,23 @@ class Quantum:
         self.visa_resource.close()
         _logger.info(f"The Quantum delay generator on port {self.port} was disconnected")
 
+    def is_alive(self):
+        """
+        Check whether the connection to the delay generator is still active.
+
+        Returns
+        -------
+        bool
+            True if the device responds, False if the connection appears lost.
+
+        """
+        try:
+            self.visa_resource.query("*IDN?")
+            return True
+        except Exception as e:  # noqa: BLE001
+            _logger.warning(f"Quantum on port {self.port} appears disconnected: {e}")
+            return False
+
     def set_delay(self, channel, dtime):
         """
         Set delay of specified channel
@@ -142,7 +161,7 @@ class Quantum:
 
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
-        timeis='{0:.11f}'.format(dtime*1.e-6)   # us to s
+        timeis = f"{dtime * 1e-6:.11f}"  # us to s
 
         # Set delay
         self.visa_resource.write(f":PULSE{channel_num}:DELAY {timeis}")
@@ -216,7 +235,7 @@ class Quantum:
 
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
-        timeis='{0:.11f}'.format(dtime*1.e-6)   # us to s
+        timeis = f"{dtime * 1.e-6:.11f}"  # us to s
 
         # Set width
         self.visa_resource.write(f":PULSE{channel_num}:WIDTH {timeis}")

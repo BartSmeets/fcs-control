@@ -36,6 +36,8 @@ class Scope:
 
     disconnect: disconnect device
 
+    is_alive: checks if device is still active
+
     read: read data from scope
 
     runstop: run or stop the scope
@@ -149,14 +151,14 @@ class Scope:
                     _logger.warning(f"I am failing to connect to {resource}, "
                                     f"maybe there is another scope in the list. "
                                     f"I am trying the next device.")
-            else:
-                raise ValueError(
-                    f"""
-                    WARNING: Scope with serial number {serial_number} was NOT found.
 
-                    And since there are multiple scopes connected, I cannot just act like I don't care and connect to another scope.
-                    """
-                )
+            raise ValueError(
+                f"""
+                WARNING: Scope with serial number {serial_number} was NOT found.
+
+                And since there are multiple scopes connected, I cannot just act like I don't care and connect to another scope.
+                """
+            )
 
     def disconnect(self):
         """
@@ -164,6 +166,23 @@ class Scope:
         """
         self.visa_resource.close()
         _logger.info(f"The scope with serial number {self.sn} was disconnected")
+
+    def is_alive(self):
+        """
+        Check whether the connection to the scope is still active.
+
+        Returns
+        -------
+        bool
+            True if the device responds, False if the connection appears lost.
+
+        """
+        try:
+            self.visa_resource.query("*IDN?")
+            return True
+        except Exception as e:  # noqa: BLE001
+            _logger.warning(f"Scope on port {self.port} appears disconnected: {e}")
+            return False
 
     def read(self, channel):
         """
@@ -205,7 +224,7 @@ class Scope:
         t_stop = t_start + total_time
         ## Y-axis: volts
         ADC_wave = bin_wave # [headerlen:-1] header is off
-        ADC_wave = np.array(unpack('%sB' % len(ADC_wave),ADC_wave))
+        ADC_wave = np.array(unpack(f'{len(ADC_wave)}B', ADC_wave))
         Volts = (ADC_wave - yoff) * ymult  + yzero
         ## Match dimensions: Exactly one time mark for every datapoint
         scaled_time = np.arange(t_stop-t_scale*len(Volts), t_stop,t_scale)
@@ -241,7 +260,7 @@ class Scope:
             Target value for the horizontal time scale
         
         """
-        self.visa_resource.write(f':HOR:SCA {str(micpdiv)}E-6')
+        self.visa_resource.write(f':HOR:SCA {micpdiv!s}E-6')
 
     def get_micpdiv(self):
         """
@@ -277,9 +296,8 @@ class Scope:
         if average > 1:
             # Message scope
             self.visa_resource.write(':ACQUIRE:MODE AVERAGE') 
-            self.visa_resource.write(f':ACQUIRE:NUMAVG {str(average)}')
+            self.visa_resource.write(f':ACQUIRE:NUMAVG {average!s}')
         elif average == 1:
             self.set_samplemode()
         else:
             raise ValueError(f"Come on... {average} is not a valid number for averging")
-        return
