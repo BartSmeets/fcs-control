@@ -76,7 +76,7 @@ def file_name(data_folder: Path, title: str) -> str:
     while True:
         suffix = f"_{counter}" if counter else ""
         filename = f"{prefix}{suffix}"
-        if not (data_folder / f"{filename}_log.txt"):
+        if not (data_folder / f"{filename}_log.txt").exists():
             break
         counter += 1
     return filename

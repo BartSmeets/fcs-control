@@ -55,7 +55,10 @@ class Experiment(ABC):
 
     def __init__(self, main_window: MainWindow | None = None):
         self.main_window = main_window
-        self.settings = main_window.get_all_settings()
+        try:
+            self.settings = main_window.get_all_settings()
+        except AttributeError:
+            self.settings = {}
 
     @property
     def all_parameters(self) -> tuple[type[Parameter], ...]:
@@ -83,9 +86,7 @@ class Experiment(ABC):
 
 
     @abstractmethod
-    def scan(self,
-            parameters: dict[str, Any],
-            ):
+    def scan(self):
         raise NotImplementedError
 
     # Set up Logbook
@@ -106,7 +107,7 @@ class Experiment(ABC):
             _logger.removeHandler(handler)
             handler.close()
 
-    def execute(self, parameters):
+    def execute(self):
         """
         The code that runs when an experiment is initiated from the UI.
         
@@ -118,7 +119,7 @@ class Experiment(ABC):
             _logger.exception("OS Error")
             QMessageBox.warning(self.main_window, "OS Error", str(e))
             return
-        self.filename = file_name(self.data_folder, parameters["title"])
+        self.filename = file_name(self.data_folder, self.settings["experiment"]["title"])
 
         # Intiate logger
         save_production_settings(self.data_folder, self.filename, self.settings)
@@ -133,7 +134,10 @@ class Experiment(ABC):
                 return
 
             # Run Scan
-            self.scan(parameters)
+            self.scan()
+            _logger.info("Scan finished succesfully. HOORAY!")
+
+            # Final comment
 
 
 
