@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtWidgets import QMessageBox
 
 from ..devices._device_manager import get_device_manager
-from ..utils.data_management import data_folder, file_name
+from ..utils.data_management import data_folder, file_name, save_production_settings
 
 if TYPE_CHECKING:
     from ..gui import MainWindow  # adjust relative path
@@ -55,6 +55,7 @@ class Experiment(ABC):
 
     def __init__(self, main_window: MainWindow | None = None):
         self.main_window = main_window
+        self.settings = main_window.get_all_settings()
 
     @property
     def all_parameters(self) -> tuple[type[Parameter], ...]:
@@ -93,7 +94,7 @@ class Experiment(ABC):
         # Write settings from the GUI as a plain header
         with open(log_path, "w", encoding="utf-8") as f:
             f.write("=== Settings ===\n")
-            f.write(json.dumps(self.main_window.get_all_settings(), indent=2, default=str))
+            f.write(json.dumps(self.settings, indent=2, default=str))
             f.write("\n=== Log ===\n")
 
         handler = logging.FileHandler(log_path, encoding="utf-8", mode="a")
@@ -120,6 +121,7 @@ class Experiment(ABC):
         self.filename = file_name(self.data_folder, parameters["title"])
 
         # Intiate logger
+        save_production_settings(self.data_folder, self.filename, self.settings)
         with self._file_logging(self.data_folder / f"{self.filename}_log.txt"):
 
             # Validate devices
@@ -127,7 +129,7 @@ class Experiment(ABC):
                 self.validate_devices()
             except OSError as e:
                 _logger.exception("Device Error")
-                QMessageBox.warning(self.parent, "Device Error", str(e))
+                QMessageBox.warning(self.main_window, "Device Error", str(e))
                 return
 
             # Run Scan

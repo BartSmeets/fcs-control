@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from datetime import date
@@ -74,3 +75,30 @@ def file_name(data_folder: Path, title: str) -> str:
             break
         counter += 1
     return filename
+
+
+def save_production_settings(folder: Path, filename: str, settings: dict):
+    """
+    Save production settings to a material specific folder:
+
+    ``.\\Production_Settings_Only\\MainMaterial\\MaterialList``
+    
+    """
+    settings_folder = folder / "Production_Settings_Only"
+
+    # Create folder for main material
+    main_material = settings["materials"][0]
+    settings_folder = settings_folder / str(main_material)
+    settings_folder.mkdir(exist_ok = True)
+
+    # Create subfolder for multiple materials
+    material_list = settings["materials"]
+    if len(material_list) > 1:
+        settings_folder = settings_folder / str(material_list)
+    else:
+        settings_folder = settings_folder / f"pure_{main_material}"
+    settings_folder.mkdir(exist_ok=True)
+
+    with open(settings_folder / f"{filename}_settings.txt", "w", encoding="utf-8") as f:
+        f.write("=== Settings ===\n")
+        f.write(json.dumps(settings, indent=2, default=str))
