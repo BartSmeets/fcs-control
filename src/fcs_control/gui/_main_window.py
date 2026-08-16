@@ -55,7 +55,6 @@ class MainWindow(QMainWindow):
     def get_all_settings(self):
         return {
             "voltages": self.voltage_panel.get_settings(),
-            "materials": self.material_panel.get_settings(),
             "delays": self.delay_panel.get_settings(),
             "experiment": self.experiment_panel.get_settings(),
         }

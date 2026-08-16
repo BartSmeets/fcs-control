@@ -58,6 +58,7 @@ class Experiment(ABC):
         try:
             self.settings = main_window.get_all_settings()
         except AttributeError:
+            _logger.exception("Something happend")
             self.settings = {}
 
     @property
@@ -119,6 +120,7 @@ class Experiment(ABC):
             _logger.exception("OS Error")
             QMessageBox.warning(self.main_window, "OS Error", str(e))
             return
+        print(self.settings)
         self.filename = file_name(self.data_folder, self.settings["experiment"]["title"])
 
         # Intiate logger

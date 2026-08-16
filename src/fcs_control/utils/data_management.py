@@ -97,12 +97,12 @@ def save_production_settings(folder: Path, filename: str, settings: dict):
 
     # Create folder for main material
     settings_folder = folder.parent.parent.parent / "Production_Settings_Only"
-    main_material = settings["materials"][0]
+    main_material = settings["voltages"]["materials"][0]
     settings_folder = settings_folder / str(main_material)
     settings_folder.mkdir(exist_ok = True)
 
     # Create subfolder for multiple materials
-    material_list = settings["materials"]
+    material_list = settings["voltages"]["materials"]
     if len(material_list) > 1:
         settings_folder = settings_folder / str(material_list)
     else:
