@@ -36,10 +36,15 @@ class MainWindow(QMainWindow):
         layout.addWidget(LogPanel(self))
         self.device_manager = get_device_manager()  # Load device manager after logpanel to add to log already
 
-        layout.addWidget(VoltagePanel(self))
-        layout.addWidget(MaterialPanel(self))
-        layout.addWidget(DelayPanel(self))
-        layout.addWidget(ExperimentPanel(self))
+        self.voltage_panel = VoltagePanel(self)
+        self.material_panel = MaterialPanel(self)
+        self.delay_panel = DelayPanel(self)
+        self.experiment_panel = ExperimentPanel(self)
+
+        layout.addWidget(self.voltage_panel)
+        layout.addWidget(self.material_panel)
+        layout.addWidget(self.delay_panel)
+        layout.addWidget(self.experiment_panel)
 
         # Cobined Panels as Widget
         widget = QWidget()
@@ -49,3 +54,11 @@ class MainWindow(QMainWindow):
         # Menu Bar
         self.menu_bar = MenuBar(self)
         self.setMenuBar(self.menu_bar)
+
+    def get_all_settings(self):
+        return {
+            "voltages": self.voltage_panel.get_settings(),
+            "materials": self.material_panel.get_settings(),
+            "delays": self.delay_panel.get_settings(),
+            "experiment": self.experiment_panel.get_settings(),
+        }

@@ -1,5 +1,9 @@
 """
-Build the experiment panel
+Build the experiment panel.
+
+This file contains the main `ExperimentPanel` as well as the subpanel `ExperimentParameters`.
+
+`ExperimentParameters` collects widgets from `utils.parameter_widgets` to build the input widgets for the experiment specific parameters.
 
 """
 
@@ -15,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..experiments import EXPERIMENT_REGISTRY, Experiment, Parameter
-from .utils.parameter_widgets import build_widget
+from .utils.parameter_widgets import build_widget, get_value
 
 
 class ExperimentPanel(QGroupBox):
@@ -40,9 +44,9 @@ class ExperimentPanel(QGroupBox):
         self.experiment_combo.addItems(list(EXPERIMENT_REGISTRY.keys()))
         self.experiment_combo.currentTextChanged.connect(self._on_experiment_change)
 
-        # Experiment Parameters
-        experiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
-        self.experiment_settings = _ExperimentParameters(experiment)
+        # Experiment Widgets
+        SelectedExperiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
+        self.experiment_widgets = _ExperimentParameters(SelectedExperiment)
         
         # Run Button
         self.run_btn = QPushButton("Run")
@@ -51,7 +55,7 @@ class ExperimentPanel(QGroupBox):
 
         # Build Panel
         self.exp_layout.addRow("Experiment: ", self.experiment_combo)  
-        self.exp_layout.addRow(self.experiment_settings)
+        self.exp_layout.addRow(self.experiment_widgets)
         self.exp_layout.addRow(self.run_btn)
         self.setLayout(self.exp_layout)
 
@@ -64,16 +68,20 @@ class ExperimentPanel(QGroupBox):
         Settings are defined by the entries in ``EXPERIMENT_REGISTRY``, see ``..experiments``.
 
         """
-        experiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
-        self.experiment_settings.set_experiment(experiment)
+        SelectedExperiment = EXPERIMENT_REGISTRY[exp_name]
+        self.experiment_widgets.set_experiment(SelectedExperiment)
 
     def _on_run(self):
         """
         Activates on button press and executes the experiment.
         
         """
-        to_run = self.active_experiment(main_window = self.window())
-        to_run.execute(parameters = self.experiment_settings.get_parameters(to_run))
+        SelectedExperiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
+        to_run = SelectedExperiment(main_window = self.window())
+        to_run.execute()
+
+    def get_settings(self):
+        return self.experiment_widgets.get_parameters()
 
 
 class _ExperimentParameters(QFormLayout):
@@ -84,7 +92,8 @@ class _ExperimentParameters(QFormLayout):
     def __init__(self, experiment: type[Experiment], parent=None):
         super().__init__(parent)
         
-        self._widgets: dict[str, object] = {}   # Will store the information
+        self._widgets: dict[str, object] = {}
+        self._parameters: dict[str, Parameter] = {}
         self.set_experiment(experiment)
 
     def set_experiment(self, experiment: type[Experiment]) -> None:
@@ -96,11 +105,12 @@ class _ExperimentParameters(QFormLayout):
         description = experiment.description
 
         self._clear_rows()
-        self.addRow(QLabel(description))      
+        self.addRow(QLabel(f"Description: {description}"))      
         self.addItem(QSpacerItem(0, 20, QSizePolicy.Minimum, QSizePolicy.Fixed))        
         for parameter in parameters:
             widget = build_widget(parameter)
             self._widgets[parameter.name] = widget
+            self._parameters[parameter.name] = parameter
             self.addRow(f"{parameter.label}: ", widget)        
 
     def _clear_rows(self) -> None:
@@ -111,13 +121,16 @@ class _ExperimentParameters(QFormLayout):
         while self.rowCount() > 0:
             self.removeRow(0)   
         self._widgets.clear()
+        self._parameters.clear()
 
-    def get_parameters(self, parameters: tuple[type[Parameter], ...]) -> dict:
+    def get_parameters(self) -> dict:
         """
         Get the values of the widgets
 
+        The parameter information is neccessary because not every widget is read the same way...
+
         """
         return {
-            parameter.name: parameter.get_value(self._widgets[parameter.name])
-            for parameter in parameters
+            name: get_value(parameter, self._widgets[name])
+            for name, parameter in self._parameters.items()
         }

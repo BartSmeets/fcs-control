@@ -1,15 +1,19 @@
+from __future__ import annotations
+
+import json
 import logging
-import os
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtWidgets import QMessageBox
 
-from ..config import NETWORK
 from ..devices._device_manager import get_device_manager
+from ..utils.data_management import data_folder, file_name
+
+if TYPE_CHECKING:
+    from ..gui import MainWindow  # adjust relative path
 
 _logger = logging.getLogger(__name__)
 
@@ -27,16 +31,14 @@ class Parameter:
 
 
 class Experiment(ABC):
+    # Has to be defined manually
     name: str = "My name is Jeff"
     description: str = ""
-
     required_devices: tuple = ()
     parameters: tuple[type[Parameter]] = ()
 
-    data_folder: str | None = None
-
     # Every experiment must have a title and comment
-    _base_parameters = (
+    _base_parameters: tuple[type[Parameter]] = (    
         Parameter('title',
                   'File Name',
                   'short_text',
@@ -45,10 +47,14 @@ class Experiment(ABC):
                   'Babbelbox',
                   'long_text',
                   ''),
-    )
+        )
 
-    def __init__(self, main_window=None):
-        self.parent_window = main_window
+    # Will be generated during run
+    data_folder: str | None = None
+
+
+    def __init__(self, main_window: MainWindow | None = None):
+        self.main_window = main_window
 
     @property
     def all_parameters(self) -> tuple[type[Parameter], ...]:
@@ -74,48 +80,30 @@ class Experiment(ABC):
         if disconnected:
             raise OSError(f"At least one required device is not connected: {disconnected}")
 
-    def prep_folder(self):
-        """
-        Set the folder to store the data and logs.
-
-        """
-        # What's the date please?
-        today = date.today()  # noqa: DTZ011
-
-        # Retrieve data location
-        base = Path(NETWORK.data_folder)
-        while not os.path.exists(base):
-            _logger.warning(f"Cannot connect to {base}. Is the PC offline by any chance?")
-
-            answer = QMessageBox.question(self.parent_window, 
-                                          'Network Folder Not Found',
-                                          f"Cannot connect to: {base}\n\n"
-                                          f"Do you want to try again?\n"
-                                          f"Yes = Retry network folder\n"
-                                          f"No = Use local folder",
-                                          QMessageBox.Yes | QMessageBox.No)
-
-            if answer == QMessageBox.No and base != Path(NETWORK.no_network_folder):
-                base = Path(NETWORK.no_network_folder)
-            else:
-                raise OSError("Neither the only nor offline folder can be reached...")
-
-        # Create subfolders
-        year_folder = base / str(today.year)
-        month_folder = year_folder / today.strftime("%b")
-        day_folder = month_folder / today.strftime("%d%m")
-
-        day_folder.mkdir(parents = True, exist_ok = True)
-        self.data_folder = day_folder
-
-        _logger.info(f"Using experiment folder: {day_folder}")
-
 
     @abstractmethod
     def scan(self,
             parameters: dict[str, Any],
             ):
         raise NotImplementedError
+
+    # Set up Logbook
+    @contextmanager
+    def _file_logging(self, log_path):
+        # Write settings from the GUI as a plain header
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write("=== Settings ===\n")
+            f.write(json.dumps(self.main_window.get_all_settings(), indent=2, default=str))
+            f.write("\n=== Log ===\n")
+
+        handler = logging.FileHandler(log_path, encoding="utf-8", mode="a")
+        handler.setFormatter(...)
+        _logger.addHandler(handler)
+        try:
+            yield                          
+        finally:
+            _logger.removeHandler(handler)
+            handler.close()
 
     def execute(self, parameters):
         """
@@ -124,34 +112,26 @@ class Experiment(ABC):
         """
         # Prepare data folder
         try:
-            self.prep_folder()
+            self.data_folder = data_folder(self.main_window)
         except OSError as e:
-            self.exp_logger.exception("OS Error")
-            QMessageBox.warning(self.parent, "OS Error", str(e))
+            _logger.exception("OS Error")
+            QMessageBox.warning(self.main_window, "OS Error", str(e))
             return
-
-
-        filename = ''   # TODO: Read filename from input
+        self.filename = file_name(self.data_folder, parameters["title"])
 
         # Intiate logger
-        self.exp_logger = logging.getLogger(f"experiment.{filename}")
-        self.exp_logger.setLevel(logging.INFO)
-        self.exp_logger.propagate = True
+        with self._file_logging(self.data_folder / f"{self.filename}_log.txt"):
 
-        handler = logging.FileHandler(self.data_folder / f"{filename}_log.txt", encoding="utf-8")
-        self.exp_logger.addHandler(handler)
+            # Validate devices
+            try:
+                self.validate_devices()
+            except OSError as e:
+                _logger.exception("Device Error")
+                QMessageBox.warning(self.parent, "Device Error", str(e))
+                return
 
-        # Prep devices and 
-        
-        try:
-            self.validate_devices()
-        except OSError as e:
-            self.exp_logger.exception("Device Error")
-            QMessageBox.warning(self.parent, "Device Error", str(e))
-            return
-
-        # Run Scan
-        self.scan(parameters)
+            # Run Scan
+            self.scan(parameters)
 
 
 
