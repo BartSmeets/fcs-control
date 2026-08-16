@@ -15,6 +15,11 @@ def data_folder(parent_window = None):
     """
     Set the folder to store the data and logs.
 
+    Returns
+    -------
+    day_folder: Path
+        Has structure: `.\\year\\month\\dm\\`
+
     """
     # What's the date please?
     today = date.today()  # noqa: DTZ011
@@ -79,14 +84,19 @@ def file_name(data_folder: Path, title: str) -> str:
 
 def save_production_settings(folder: Path, filename: str, settings: dict):
     """
-    Save production settings to a material specific folder:
+    Save production settings twice: 
+    * In main folder
 
+    * And to a material specific folder:
     ``.\\Production_Settings_Only\\MainMaterial\\MaterialList``
     
     """
-    settings_folder = folder / "Production_Settings_Only"
+    # First
+    with open(folder / f"{filename}_settings.json", "w") as f:
+        json.dump(settings, f)
 
     # Create folder for main material
+    settings_folder = folder.parent.parent.parent / "Production_Settings_Only"
     main_material = settings["materials"][0]
     settings_folder = settings_folder / str(main_material)
     settings_folder.mkdir(exist_ok = True)
@@ -99,6 +109,5 @@ def save_production_settings(folder: Path, filename: str, settings: dict):
         settings_folder = settings_folder / f"pure_{main_material}"
     settings_folder.mkdir(exist_ok=True)
 
-    with open(settings_folder / f"{filename}_settings.txt", "w", encoding="utf-8") as f:
-        f.write("=== Settings ===\n")
-        f.write(json.dumps(settings, indent=2, default=str))
+    with open(settings_folder / f"{filename}_settings.json", "w") as f:
+        json.dump(settings, f)
