@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ._material_panel import MaterialPanel
+
 
 class VoltagePanel(QWidget):
     """
@@ -37,6 +39,9 @@ class VoltagePanel(QWidget):
         ])
         layout.addWidget(self.voltages)
 
+        self.materials = MaterialPanel(parent)
+        layout.addWidget(self.materials)
+
         # TODO: read these from a defaults file
         self.misc = ParameterGroup("Misc", [
             # Observable, dtype, maximum, unit, default
@@ -47,20 +52,18 @@ class VoltagePanel(QWidget):
         ])
         layout.addWidget(self.misc)
 
-    def get_settings(self):
+        
+
+    def get_settings(self) -> dict:
         """
-        Returns
-        -------
-        values: dict[str, int | float]
-            Keys are the voltage channels or name of the misc setting.
-            Values are the value of the spinboxes.
-            See `ParameterGroup.get_settings()`
+        Settings of voltages, materials and misc
 
         """
-        values = {}
-        values.update(self.voltages.get_settings())
-        values.update(self.misc.get_settings())
-        return values
+        return {
+            "voltages": self.voltages.get_settings(),
+            "materials": self.materials.get_settings(),
+            "misc": self.misc.get_settings(),
+        }
 
 
 class ParameterGroup(QGroupBox):

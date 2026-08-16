@@ -13,7 +13,6 @@ from ..devices import get_device_manager
 from ._delay_panel import DelayPanel
 from ._experiment_panel import ExperimentPanel
 from ._log_panel import LogPanel
-from ._material_panel import MaterialPanel
 from ._menu_bar import MenuBar
 from ._voltage_panel import VoltagePanel
 
@@ -37,12 +36,10 @@ class MainWindow(QMainWindow):
         self.device_manager = get_device_manager()  # Load device manager after logpanel to add to log already
 
         self.voltage_panel = VoltagePanel(self)
-        self.material_panel = MaterialPanel(self)
         self.delay_panel = DelayPanel(self)
         self.experiment_panel = ExperimentPanel(self)
 
         layout.addWidget(self.voltage_panel)
-        layout.addWidget(self.material_panel)
         layout.addWidget(self.delay_panel)
         layout.addWidget(self.experiment_panel)
 
