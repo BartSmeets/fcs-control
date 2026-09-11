@@ -1,6 +1,5 @@
 import time
 
-from ..devices import get_device_manager
 from .base import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
@@ -10,7 +9,7 @@ _FREQUENCY = 10
 class Record_RTOF(Experiment):
     name = "Record RTOF"
     description = "Records the RTOF mass spectrum over a chosen amount of cycles."
-    required_devices = ('primaryscope')
+    required_devices = ('primaryscope',)
 
     parameters = (
         Parameter('num', 'Number of Cycles', 'int', 0),
@@ -19,18 +18,19 @@ class Record_RTOF(Experiment):
     def scan(self):
         start_time = time.time()
         parameters = self.get_parameters()
-        num = parameters['num']
-        dm = get_device_manager()
-        datasum = None
 
+        num = parameters['num']
+        scope = self.devices['primaryscope']
+
+        datasum = None
+        
         for i in range(num):
             if self.report_progress(i, num, start_time):
-                self.running = False
                 break
 
             # Read scope
             time.sleep(_SCOPE_AVERAGES / _FREQUENCY)    # Wait until scope averaging is fully refreshed
-            data = dm.primaryscope.read()
+            data = scope.read()
 
             # Collect Data
             if datasum is None:

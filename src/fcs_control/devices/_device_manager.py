@@ -5,6 +5,8 @@ Collect the devices
 __all__ = ["get_device_manager"]
 
 import logging
+import threading
+from contextlib import contextmanager
 
 from ._quantum import Quantum
 from ._scope import Scope
@@ -13,17 +15,20 @@ DEVICE_CLS = {
             "quantum": {
                 "class": Quantum,
                 "kwargs": {},
-                "description": "Quantum 9520 Delay Generator"
+                "description": "Quantum 9520 Delay Generator",
+                "occupied": False,
             },
             "primaryscope": {
                 "class": Scope,
                 "kwargs": {"prisec": "primary"},
-                "description": "Primary MDO34 Scope"
+                "description": "Primary MDO34 Scope",
+                "occupied": False,
             },
             "secondaryscope": {
                 "class": Scope,
                 "kwargs": {"prisec": "secondary"},
-                "description": "Secondary MDO34 Scope"
+                "description": "Secondary MDO34 Scope",
+                "occupied": False,
             },
         }
 
@@ -37,17 +42,6 @@ class DeviceManager:
     def __init__(self):
         """
         Device Manager: sets attributes and tries to connect
-
-        Attributes
-        ----------
-        Quantum: Quantum | None
-            Quantum delay generator
-
-        PrimaryScope: Scope |None
-            Scope object
-
-        SecondaryScope: Scope | None
-            Scope object
 
         Methods
         -------
@@ -64,20 +58,23 @@ class DeviceManager:
         }
 
         self.connect_all()
+        self._lock = threading.Lock()
+        self.connect_all()
 
-    def __getattr__(self, name):
-        """
-        Return the instance of a registered device as an attribute:
-
-        ``device_manager.name`` is the same as ``device_manager.devices[name]["instance"]``
-
-        """
+    def get_device(self, key):
         try:
-            return self.devices[name]["instance"]
+            info = self.devices[key]
         except KeyError:
             raise AttributeError(
-                f"{type(self).__name__!r} has no attribute {name!r}"
-            )
+                f"{type(self).__name__!r} has no attribute {key!r}"
+                )
+
+        if info["occupied"]:
+            raise RuntimeError(
+                f"{key} is being used in a running experiment"
+                )
+
+        return info["instance"]
 
     @property
     def online(self):
@@ -102,6 +99,20 @@ class DeviceManager:
             if info["instance"] is None
         ]
 
+    @contextmanager
+    def reserve(self, key: str):
+        info = self.devices[key]
+
+        with self._lock:
+            if info["occupied"]:
+                raise RuntimeError(f"{key} is already occupied")
+            info["occupied"] = True
+
+        try:
+            yield info["instance"]
+        finally:
+            info["occupied"] = False
+
     def is_connected(self, key):
         """
         Whether a specific device (by key) is currently connected.
@@ -120,6 +131,8 @@ class DeviceManager:
                 cls = info["class"]
                 kwargs = info["kwargs"]
 
+                if info["occupied"]:
+                    continue
                 info["instance"] = cls(**kwargs)
 
                 _logger.info(f"{key} successfully connected")
@@ -135,7 +148,7 @@ class DeviceManager:
         """
         for key, info in self.devices.items():
             instance = info["instance"]
-            if instance:
+            if instance and not info["occupied"]:
                 instance.disconnect()
                 info["instance"] = None
                 _logger.info(f"{key} disconnected")
@@ -151,7 +164,11 @@ class DeviceManager:
             True if the device is connected and responsive.
 
         """
-        instance = self.devices[key]["instance"]
+        info = self.devices[key]
+        if info["occupied"]:
+            raise RuntimeError(f"{key} is already occupied")
+
+        instance = info["instance"]
         if instance is None:
             return False
         if not instance.is_alive():

@@ -18,7 +18,7 @@ import json
 import logging
 import time
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -141,7 +141,6 @@ class _ScanRunner(QObject):
     @Slot()
     def _on_cancel(self):
         self.experiment._cancel_requested = True
-        self.experiment.running = False
 
     @Slot(int, int, str)
     def _on_progress(self, current: int, total: int, text: str):
@@ -179,7 +178,6 @@ class Experiment(ABC):
     description: str = ""
     required_devices: tuple = ()
     parameters: tuple[type[Parameter]] = ()
-    running: bool = False
 
     # Every experiment must have a title and comment
     _base_parameters: tuple[type[Parameter]] = (    
@@ -195,7 +193,6 @@ class Experiment(ABC):
 
     # Will be generated during run
     data_folder: str | None = None
-
 
     def __init__(self, main_window: MainWindow | None = None):
         self.main_window = main_window
@@ -388,28 +385,39 @@ class Experiment(ABC):
             # Validate devices
             try:
                 self.validate_devices()
-            except OSError as e:
+            except (OSError, RuntimeError) as e:
                 _logger.exception("Device Error")
                 QMessageBox.warning(self.main_window, "Device Error", str(e))
                 return
 
             # Run Scan on a background thread
             _logger.info("Scan started")
-            self.running = True
-            self._cancel_requested = False
 
-            runner = _ScanRunner(self)
-            self.result = runner.run()
+            with ExitStack() as stack:
+                self.devices = {}
+                dm = get_device_manager()
 
-            self._worker = None
-            self.running = False
+                try:
+                    for key in self.required_devices:
+                        self.devices[key] = stack.enter_context(dm.reserve(key))
+                except RuntimeError as e:
+                    _logger.exception("Device Reservation Error")
+                    QMessageBox.warning(self.main_window, "Device Busy", str(e))
+                    return
+            
+                self._cancel_requested = False
 
-            if runner.error is not None:
-                _logger.error("Scan failed: %s", runner.error)
-                QMessageBox.warning(self.main_window, "Scan Error", runner.error)
-                return
-            else:
-                _logger.info("Scan completed.")
+                runner = _ScanRunner(self)
+                self.result = runner.run()
+
+                self._worker = None
+
+                if runner.error is not None:
+                    _logger.error("Scan failed: %s", runner.error)
+                    QMessageBox.warning(self.main_window, "Scan Error", runner.error)
+                    return
+                else:
+                    _logger.info("Scan completed.")
 
             # Final comment
             comment_box = CommentBox(self.main_window)

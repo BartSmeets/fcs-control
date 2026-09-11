@@ -157,7 +157,7 @@ class _DelayGenBox(QGroupBox):
         """
         # Wire device
         if self.name == 'Quantum 9520':
-            device = self.device_manager.quantum
+            device = self.device_manager.get_device(self.name)
         elif self.name == 'Stanford DG535':
             _logger.warning(f"{self.name} refresh not yet implemented") # TODO: connect stanford device
             return
