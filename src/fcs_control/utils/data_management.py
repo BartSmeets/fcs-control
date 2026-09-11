@@ -110,4 +110,10 @@ def save_production_settings(folder: Path, filename: str, settings: dict):
     settings_folder.mkdir(exist_ok=True)
 
     with open(settings_folder / f"{filename}_settings.json", "w") as f:
-        json.dump(settings, f)
+        json.dump(
+            settings,
+            f,
+            indent=2,
+            sort_keys=True,
+            default=str
+        )

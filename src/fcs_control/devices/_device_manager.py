@@ -29,7 +29,11 @@ DEVICE_CLS = {
 
 _logger = logging.getLogger(__name__)
 
-class _DeviceManager:
+class DeviceManager:
+    quantum: Quantum | None
+    primaryscope: Scope | None
+    secondaryscope: Scope | None
+
     def __init__(self):
         """
         Device Manager: sets attributes and tries to connect
@@ -166,7 +170,7 @@ class _DeviceManager:
 
 _device_manager = None
 
-def get_device_manager():
+def get_device_manager() -> DeviceManager:
     """
     Use this to get the global device manager.
     
@@ -174,6 +178,6 @@ def get_device_manager():
     global _device_manager
 
     if _device_manager is None:
-        _device_manager = _DeviceManager()
+        _device_manager = DeviceManager()
 
     return _device_manager
