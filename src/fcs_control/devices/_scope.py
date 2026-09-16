@@ -114,41 +114,39 @@ class Scope:
         def _identify_resource(resource_name):
             instrument = get_resource_manager().open_resource(resource_name)
             idn = instrument.query("*IDN?")
+            _logger.debug(f"ID {idn}")
             return instrument, idn
 
         if not resources:
             raise NameError("No ports named " + port_name + " found.")
 
         if len(resources) == 1: # If only one occurence is found, update foundport
-            found_port = str(resources[0])
+            port = str(resources[0])
             # Check if serial number matches
-            visa_resource, idn = _identify_resource(found_port)
+            visa_resource, idn = _identify_resource(port)
 
             if serial_number in idn:
                 _logger.info(f"The scope with serial number {serial_number} was found")
                 sn = serial_number
-                port = found_port
             else:
                 _logger.warning(f"Scope with serial number {serial_number} was not found. "
                                 f"But since only one scope was found, I am using {idn}")
                 sn = idn
-                port = found_port
 
             return visa_resource, sn, port
 
-        if len(resources) > 1:
+        elif len(resources) > 1:
             ## Try if any of the ports matches the serial number
-            for resource in resources:  
+            for port in resources:  
                 try:
-                    visa_resource, idn = _identify_resource(found_port)
+                    visa_resource, idn = _identify_resource(port)
                     
                     if serial_number in idn:                    
                         _logger.info(f"The scope with serial number {serial_number} was found")
                         sn = serial_number
-                        port = found_port
                         return visa_resource, sn, port
                 except pyvisa.errors.VisaIOError:
-                    _logger.warning(f"I am failing to connect to {resource}, "
+                    _logger.warning(f"I am failing to connect to {port}, "
                                     f"maybe there is another scope in the list. "
                                     f"I am trying the next device.")
 
@@ -178,7 +176,7 @@ class Scope:
 
         """
         try:
-            self.visa_resource.query("*IDN?")
+            _logger.debug(f"ID {self.visa_resource.query("*IDN?")}")
             return True
         except Exception as e:  # noqa: BLE001
             _logger.warning(f"Scope on port {self.port} appears disconnected: {e}")

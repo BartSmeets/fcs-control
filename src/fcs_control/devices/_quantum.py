@@ -13,7 +13,6 @@ from ..config import HARDWARE
 from ..utils.visa import get_resource_manager, get_resources
 
 _LETTER_LIST = string.ascii_uppercase[:8]
-_ONOFF_LIST = ["OFF", "ON"]
 
 _logger = logging.getLogger(__name__)
 
@@ -176,7 +175,7 @@ class Quantum:
 
         """
         try:
-            _logger.debug(f"ID {self.visa_resource.query("*IDN?")!r}")
+            _logger.debug(f"ID {self.query("*IDN?")!r}")
             return True
         except Exception as e:  # noqa: BLE001
             _logger.warning(f"Quantum on port {self.port} appears disconnected: {e}")
@@ -200,7 +199,7 @@ class Quantum:
 
         # Set delay
         self.visa_resource.write(f":PULSE{channel_num}:DELAY {timeis}")
-        _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         _logger.info(f"Delay of CH{channel} on Quantum ({self.port}) is set to {dtime:.2f} µs")
 
@@ -219,14 +218,14 @@ class Quantum:
         channel_num = _LETTER_LIST.find(channel) + 1
 
         self.visa_resource.write(f':PULSE{channel_num}:CMOD {mode}')
-        _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         if mode.upper()=="DCYC":
             self.visa_resource.write(f':PULSE{channel_num}:PCO 1')
-            _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
             
             self.visa_resource.write(f':PULSE{channel_num}:BCO 1')
-            _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         _logger.info(f"CH{channel} on Quantum ({self.port}) has been set to mode {mode}")
 
@@ -252,7 +251,7 @@ class Quantum:
             ref_string = f"CH{channel_ref}"
 
         self.visa_resource.write(f':PULSE{channel_num}:SYNC {ref_string}')
-        _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         _logger.info(f"Reference of CH{channel} on Quantum ({self.port}) is set to {ref_string}")
 
@@ -274,7 +273,7 @@ class Quantum:
 
         # Set width
         self.visa_resource.write(f":PULSE{channel_num}:WIDTH {timeis}")
-        _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
         
         _logger.info(f"Width of CH{channel} on Quantum ({self.port}) is set to {dtime:.2f} µs")
     
@@ -407,9 +406,9 @@ class Quantum:
 
         # Switch channel
         self.visa_resource.write(f':PULSE{channel_num}:STAT {onoff}')
-        _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
-        _logger.info(f"CH{channel} on Quantum ({self.port}) has been switched {_ONOFF_LIST[onoff]}")
+        _logger.info(f"CH{channel} on Quantum ({self.port}) has been switched {onoff}")
 
     def t0_normal(self):
         '''
@@ -417,7 +416,7 @@ class Quantum:
         
         '''
         self.visa_resource.write(':PULSE0:MOD NORM')
-        _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
     def runstop(self, runstop):
         '''
@@ -431,7 +430,7 @@ class Quantum:
         '''
         if runstop.upper()=="RUN":
             self.visa_resource.write(':PULSE0:STAT ON')
-            _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
         else:
             self.visa_resource.write(':PULSE0:STAT OFF')
-            _logger.debug(f"OPC? {self.visa_resource.query("*OPC?")!r}")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
