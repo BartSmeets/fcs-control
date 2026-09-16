@@ -84,6 +84,35 @@ class Quantum:
             settings[letter] = self.get_all(letter)
         self.settings = settings
 
+    def query(self, query: str, normblocker: bool = True):
+        """
+        Johan:
+        The thing frequently sends a read termination after sending the text "ok" a few times, this will need to filtered out. 
+        It also sends the text NORM back sometimes. I checked Baudrate it is correct.. 
+        I tried with read but it hinders pyvisa from sending the next command. So like this was the most stable. 
+        But NORM can be an actual reply, hence I had to give it as an option.
+
+        Parameters
+        ----------
+        query: str
+            the command to the delay generator
+        normblocker: Boolean (default = True)
+            determines if NORM can be accepted as answer
+        
+        """
+        # Initialise and send query
+        answer="ok"
+        self.visa_resource.write(query)
+
+        # filter 'ok' and/or 'norm'
+        if normblocker:
+            while (("ok" in answer) or ("NORM" in answer)):
+                answer=self.visa_resource.read()
+        else:
+            while ("ok" in answer):
+                answer=self.visa_resource.read()
+        return answer
+
     def connect(self):
         """
         Connect to Quantum delay generator.
@@ -260,7 +289,7 @@ class Quantum:
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
 
-        delay = float(self.visa_resource.query(f":PULSE{channel_num}:DELAY?"))
+        delay = float(self.query(f":PULSE{channel_num}:DELAY?"))
         delay *= 1e6
         return delay
 
@@ -281,7 +310,7 @@ class Quantum:
         '''
         channel_num = _LETTER_LIST.find(channel) + 1
 
-        mode = self.visa_resource.write(f':PULSE{channel_num}:CMOD?')
+        mode = self.query(f':PULSE{channel_num}:CMOD?', True)
         return mode
 
     def get_reference(self, channel):
@@ -301,7 +330,7 @@ class Quantum:
         """
         channel_num = _LETTER_LIST.find(channel) + 1
 
-        channel_ref = self.visa_resource.write(f':PULSE{channel_num}:SYNC?')
+        channel_ref = self.query(f':PULSE{channel_num}:SYNC?')
         return channel_ref
 
     def get_width(self, channel):
@@ -319,7 +348,7 @@ class Quantum:
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
 
-        width = float(self.visa_resource.write(f":PULSE{channel_num}:WIDTH?"))
+        width = float(self.query(f":PULSE{channel_num}:WIDTH?"))
         width *= 1e6
         return width
 
