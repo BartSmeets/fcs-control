@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (
 
 from ..devices import get_device_manager
 from ._delay_panel import DelayPanel
+from ._experiment_panel import ExperimentPanel
 from ._log_panel import LogPanel
-from ._material_panel import MaterialPanel
 from ._menu_bar import MenuBar
 from ._voltage_panel import VoltagePanel
 
@@ -35,9 +35,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(LogPanel(self))
         self.device_manager = get_device_manager()  # Load device manager after logpanel to add to log already
 
-        layout.addWidget(VoltagePanel(self))
-        layout.addWidget(MaterialPanel(self))
-        layout.addWidget(DelayPanel(self.device_manager, self))
+        self.voltage_panel = VoltagePanel(self)
+        self.delay_panel = DelayPanel(self)
+        self.experiment_panel = ExperimentPanel(self)
+
+        layout.addWidget(self.voltage_panel)
+        layout.addWidget(self.delay_panel)
+        layout.addWidget(self.experiment_panel)
 
         # Cobined Panels as Widget
         widget = QWidget()
@@ -45,5 +49,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
         # Menu Bar
-        self.menu_bar = MenuBar(self.device_manager, self)
+        self.menu_bar = MenuBar(self)
         self.setMenuBar(self.menu_bar)
+
+    def get_all_settings(self):
+        return {
+            "voltages": self.voltage_panel.get_settings(),
+            "delays": self.delay_panel.get_settings(),
+            "experiment": self.experiment_panel.get_settings(),
+        }

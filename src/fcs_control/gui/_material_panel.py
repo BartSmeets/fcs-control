@@ -5,22 +5,13 @@ Builds MaterialPanel for material selection
 
 """
 from PySide6.QtWidgets import (
-    QComboBox,
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QVBoxLayout,
 )
-
-# Elements to choose from
-ELEMENTS = [
-    'H2', 'D2', 'He',
-    'C', 'C60', 'CO2', 'N2', 'O',
-    'Al', 'Si', 'Ar',
-    'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
-    'Nb', 'Rh', 'Pd', 'Ag'
-]
 
 
 class MaterialPanel(QGroupBox):
@@ -39,19 +30,19 @@ class MaterialPanel(QGroupBox):
         self.material_layout = QVBoxLayout()    # Materials selection (no button)
         layout.addLayout(self.material_layout)
 
-        self.elements = []
+        self.elements: list[QLineEdit] = []
 
         # Intial Comboboxes
-        self.add_combobox()
-        self.add_combobox()
+        self.add_line()
+
 
         # Add combox button
         add_btn = QPushButton("Add Element")
-        add_btn.clicked.connect(self.add_combobox)
+        add_btn.clicked.connect(self.add_line)
         layout.addWidget(add_btn)
         layout.addStretch()
 
-    def add_combobox(self):
+    def add_line(self):
         """
         Add a Combobox widget to the MaterialPanel
 
@@ -63,25 +54,23 @@ class MaterialPanel(QGroupBox):
         row.addWidget(label)
 
         # Combobox
-        combo = QComboBox()
-        combo.setEditable(True)
-        combo.addItems(ELEMENTS)
-        row.addWidget(combo)
+        line = QLineEdit()
+        row.addWidget(line)
 
         # Add remove button
         remove_btn = QPushButton('X')
-        remove_btn.clicked.connect(lambda: self.remove_combobox(combo, row))
+        remove_btn.clicked.connect(lambda: self.remove_lineedit(line, row))
         row.addWidget(remove_btn)
         
-        self.elements.append(combo) # Stores the information (individual comboboxes)
+        self.elements.append(line) # Stores the information (individual lines)
         self.material_layout.addLayout(row) # Adds row to material layout
 
-    def remove_combobox(self, combo, row):
+    def remove_lineedit(self, line: QLineEdit, row: QHBoxLayout):
         """
         Remove a combobox by removing its row
 
         """
-        self.elements.remove(combo)
+        self.elements.remove(line)
 
         while row.count():
             item = row.takeAt(0)
@@ -93,10 +82,10 @@ class MaterialPanel(QGroupBox):
         Returns
         -------
         list[str]
-            List of box contents (material selection)
+            List of line contents (material selection)
             
         """
         return [
-            box.currentText()
-            for box in self.elements
+            line.text()
+            for line in self.elements
         ]

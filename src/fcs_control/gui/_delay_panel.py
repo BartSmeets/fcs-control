@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from ..devices import get_device_manager
+
 # ====================
 # Registry: Add new delay generators and their available channels here
 # Don't forget to wire the device_manager in `_DelayGenBox.refresh()`
@@ -88,11 +90,11 @@ class _DelayGenBox(QGroupBox):
     Builds panel for individual delay generator
 
     """
-    def __init__(self, name, device_manager, parent=None):
+    def __init__(self, name, parent=None):
         super().__init__(name, parent)
 
         # Common information
-        self.device_manager = device_manager
+        self.device_manager = get_device_manager()
         self.name = name
         self.channels = _CONNECTED_GENERATORS[name]
 
@@ -130,12 +132,14 @@ class _DelayGenBox(QGroupBox):
             delay_spin.setRange(-1e6, 1e6)
             delay_spin.setDecimals(1)
             delay_spin.setSingleStep(0.1)
+            delay_spin.setEnabled(False)
             layout.addWidget(delay_spin, row, 1)
 
             # Column 3: reference channel selection
             ref_combo = QComboBox()
             ref_combo.addItem("T0")
             ref_combo.addItems([c for c in self.channels if c != ch])
+            ref_combo.setEnabled(False)
             layout.addWidget(ref_combo, row, 2)
 
             # Store widgets
@@ -155,7 +159,7 @@ class _DelayGenBox(QGroupBox):
         """
         # Wire device
         if self.name == 'Quantum 9520':
-            device = self.device_manager.quantum
+            device = self.device_manager.get_device('quantum')
         elif self.name == 'Stanford DG535':
             _logger.warning(f"{self.name} refresh not yet implemented") # TODO: connect stanford device
             return

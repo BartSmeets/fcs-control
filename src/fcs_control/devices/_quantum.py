@@ -7,12 +7,12 @@ __all__ = ["Quantum"]
 
 import logging
 import string
+import time
 
 from ..config import HARDWARE
 from ..utils.visa import get_resource_manager, get_resources
 
 _LETTER_LIST = string.ascii_uppercase[:8]
-_ONOFF_LIST = ["OFF", "ON"]
 
 _logger = logging.getLogger(__name__)
 
@@ -47,6 +47,8 @@ class Quantum:
 
         disconnect: disconnect device
 
+        is_alive: checks if device still responds
+
         set_delay: set delay
 
         set_mode: set operation mode
@@ -77,10 +79,44 @@ class Quantum:
         _logger.info(f"Connected to Quantum 9520 at port {self.port}")
         
         # Read settings
-        settings = dict()
+        settings = {}
         for letter in _LETTER_LIST:
             settings[letter] = self.get_all(letter)
         self.settings = settings
+
+    def query(self, query: str, normblocker: bool = True):
+        """
+        Johan:
+        The thing frequently sends a read termination after sending the text "ok" a few times, this will need to filtered out. 
+        It also sends the text NORM back sometimes. I checked Baudrate it is correct.. 
+        I tried with read but it hinders pyvisa from sending the next command. So like this was the most stable. 
+        But NORM can be an actual reply, hence I had to give it as an option.
+
+        Parameters
+        ----------
+        query: str
+            the command to the delay generator
+        normblocker: bool (default = True)
+            determines if NORM can be accepted as answer
+        
+        """
+        time.sleep(0.1)
+
+        _logger.debug(f"SEND {query}")
+        # Initialise and send query
+        answer="ok"
+        self.visa_resource.write(query)
+
+        # filter 'ok' and/or 'norm'
+        if normblocker:
+            while (("ok" in answer) or ("NORM" in answer)):
+                answer=self.visa_resource.read()
+                _logger.debug(f"READ {answer!r}")
+        else:
+            while ("ok" in answer):
+                answer=self.visa_resource.read()
+                _logger.debug(f"READ {answer!r}")
+        return answer
 
     def connect(self):
         """
@@ -128,6 +164,23 @@ class Quantum:
         self.visa_resource.close()
         _logger.info(f"The Quantum delay generator on port {self.port} was disconnected")
 
+    def is_alive(self):
+        """
+        Check whether the connection to the delay generator is still active.
+
+        Returns
+        -------
+        bool
+            True if the device responds, False if the connection appears lost.
+
+        """
+        try:
+            _logger.debug(f"ID {self.query("*IDN?")!r}")
+            return True
+        except Exception as e:  # noqa: BLE001
+            _logger.warning(f"Quantum on port {self.port} appears disconnected: {e}")
+            return False
+
     def set_delay(self, channel, dtime):
         """
         Set delay of specified channel
@@ -142,11 +195,11 @@ class Quantum:
 
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
-        timeis='{0:.11f}'.format(dtime*1.e-6)   # us to s
+        timeis = f"{dtime * 1e-6:.11f}"  # us to s
 
         # Set delay
         self.visa_resource.write(f":PULSE{channel_num}:DELAY {timeis}")
-        self.visa_resource.query("*OPC?")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         _logger.info(f"Delay of CH{channel} on Quantum ({self.port}) is set to {dtime:.2f} µs")
 
@@ -165,14 +218,14 @@ class Quantum:
         channel_num = _LETTER_LIST.find(channel) + 1
 
         self.visa_resource.write(f':PULSE{channel_num}:CMOD {mode}')
-        self.visa_resource.query("*OPC?")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         if mode.upper()=="DCYC":
             self.visa_resource.write(f':PULSE{channel_num}:PCO 1')
-            self.visa_resource.query("*OPC?")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
             
             self.visa_resource.write(f':PULSE{channel_num}:BCO 1')
-            self.visa_resource.query("*OPC?")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         _logger.info(f"CH{channel} on Quantum ({self.port}) has been set to mode {mode}")
 
@@ -198,7 +251,7 @@ class Quantum:
             ref_string = f"CH{channel_ref}"
 
         self.visa_resource.write(f':PULSE{channel_num}:SYNC {ref_string}')
-        self.visa_resource.query("*OPC?")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
         _logger.info(f"Reference of CH{channel} on Quantum ({self.port}) is set to {ref_string}")
 
@@ -216,11 +269,11 @@ class Quantum:
 
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
-        timeis='{0:.11f}'.format(dtime*1.e-6)   # us to s
+        timeis = f"{dtime * 1.e-6:.11f}"  # us to s
 
         # Set width
         self.visa_resource.write(f":PULSE{channel_num}:WIDTH {timeis}")
-        self.visa_resource.query("*OPC?")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
         
         _logger.info(f"Width of CH{channel} on Quantum ({self.port}) is set to {dtime:.2f} µs")
     
@@ -241,7 +294,7 @@ class Quantum:
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
 
-        delay = float(self.visa_resource.query(f":PULSE{channel_num}:DELAY?"))
+        delay = float(self.query(f":PULSE{channel_num}:DELAY?"))
         delay *= 1e6
         return delay
 
@@ -262,7 +315,7 @@ class Quantum:
         '''
         channel_num = _LETTER_LIST.find(channel) + 1
 
-        mode = self.visa_resource.write(f':PULSE{channel_num}:CMOD?')
+        mode = self.query(f':PULSE{channel_num}:CMOD?', normblocker=False)
         return mode
 
     def get_reference(self, channel):
@@ -282,8 +335,13 @@ class Quantum:
         """
         channel_num = _LETTER_LIST.find(channel) + 1
 
-        channel_ref = self.visa_resource.write(f':PULSE{channel_num}:SYNC?')
-        return channel_ref
+        channel_ref = self.query(f':PULSE{channel_num}:SYNC?')
+
+        # channel_ref looks like CHX -> filter CH
+        if channel_ref[0] == 'T':
+            return 'T0'
+        else:
+            return channel_ref[2]
 
     def get_width(self, channel):
         """
@@ -300,7 +358,7 @@ class Quantum:
         """
         channel_num = _LETTER_LIST.find(channel) + 1  # channel number, now +1 because at the 9520 A=1
 
-        width = float(self.visa_resource.write(f":PULSE{channel_num}:WIDTH?"))
+        width = float(self.query(f":PULSE{channel_num}:WIDTH?"))
         width *= 1e6
         return width
 
@@ -348,9 +406,9 @@ class Quantum:
 
         # Switch channel
         self.visa_resource.write(f':PULSE{channel_num}:STAT {onoff}')
-        self.visa_resource.query("*OPC?")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
-        _logger.info(f"CH{channel} on Quantum ({self.port}) has been switched {_ONOFF_LIST[onoff]}")
+        _logger.info(f"CH{channel} on Quantum ({self.port}) has been switched {onoff}")
 
     def t0_normal(self):
         '''
@@ -358,7 +416,7 @@ class Quantum:
         
         '''
         self.visa_resource.write(':PULSE0:MOD NORM')
-        self.visa_resource.query("*OPC?")
+        _logger.debug(f"OPC? {self.query("*OPC?")!r}")
 
     def runstop(self, runstop):
         '''
@@ -372,7 +430,7 @@ class Quantum:
         '''
         if runstop.upper()=="RUN":
             self.visa_resource.write(':PULSE0:STAT ON')
-            self.visa_resource.query("*OPC?")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
         else:
             self.visa_resource.write(':PULSE0:STAT OFF')
-            self.visa_resource.query("*OPC?")
+            _logger.debug(f"OPC? {self.query("*OPC?")!r}")
