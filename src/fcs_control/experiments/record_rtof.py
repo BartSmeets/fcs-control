@@ -1,6 +1,8 @@
 import time
 
-from .base import Experiment, Parameter, register_experiment
+import numpy as np
+
+from ..experiments import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
 _FREQUENCY = 10
@@ -30,12 +32,13 @@ class Record_RTOF(Experiment):
 
             # Read scope
             time.sleep(_SCOPE_AVERAGES / _FREQUENCY)    # Wait until scope averaging is fully refreshed
-            data = scope.read()
+            data = scope.read('CH1')
 
             # Collect Data
             if datasum is None:
-                datasum = data[:, 1].copy()
+                datasum = data.copy()
             else:
-                datasum += data[:, 1]
+                datasum[:, 1] += data[:, 1]
 
+        np.save(self.data_folder / f"{self.filename}.npy", datasum)
         return datasum

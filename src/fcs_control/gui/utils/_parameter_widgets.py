@@ -54,9 +54,10 @@ def _build_int(p: Parameter) -> QSpinBox:
     
     """
     spinbox = QSpinBox()
-    spinbox.value = int(p.default)
-    spinbox.minimum = p.minimum
-    spinbox.maximum = p.maximum
+    spinbox.setValue = int(p.default)
+    spinbox.setMinimum(int(p.minimum))
+    spinbox.setMaximum(int(p.maximum))
+
     return spinbox
 
 

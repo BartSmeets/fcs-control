@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..experiments import EXPERIMENT_REGISTRY, Experiment, Parameter
-from .utils.parameter_widgets import build_widget, get_value
+from .utils._parameter_widgets import build_widget, get_value
 
 
 class ExperimentPanel(QGroupBox):

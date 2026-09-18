@@ -57,7 +57,6 @@ class DeviceManager:
             for key, info in DEVICE_CLS.items()
         }
 
-        self.connect_all()
         self._lock = threading.Lock()
         self.connect_all()
 

@@ -132,12 +132,14 @@ class _DelayGenBox(QGroupBox):
             delay_spin.setRange(-1e6, 1e6)
             delay_spin.setDecimals(1)
             delay_spin.setSingleStep(0.1)
+            delay_spin.setEnabled(False)
             layout.addWidget(delay_spin, row, 1)
 
             # Column 3: reference channel selection
             ref_combo = QComboBox()
             ref_combo.addItem("T0")
             ref_combo.addItems([c for c in self.channels if c != ch])
+            ref_combo.setEnabled(False)
             layout.addWidget(ref_combo, row, 2)
 
             # Store widgets

@@ -7,9 +7,23 @@ Parameter: Class
     Class for communicating required parameters to the GUI
 Experiment: Class
     Class for defining the Experiment
+register_experiment: function
+    Add the experiment to the REGISTRY
 
 To define an experiment:
-Add an experiment file `<experiment>.py`, containing an `Experiment` class definition
+Add an experiment file `<experiment>.py`, containing an `Experiment` class definition with the `@register_experiment` decorator:
+
+```
+@register_experiment
+class Example(Experiment):
+    name = 'example'
+    description = 'This is an example'
+    required_devices = ('some_device',)
+    parameters = (Parameter('example', 'Example', 'int', 0),)
+
+    def scan(self):
+        (...)
+```
 
 """
 from __future__ import annotations
@@ -21,7 +35,7 @@ from abc import ABC, abstractmethod
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from PySide6.QtCore import QEventLoop, QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QDialog, QMessageBox, QProgressDialog
@@ -41,15 +55,37 @@ class Parameter:
     """
     Parameter data class
 
-    This class is used to communicate required parameters for an experiment to the GUI
+    This class is used to communicate required parameters for an experiment to the GUI.
+
+    Attributes
+    ----------
+    name: str
+        Name of the parameter.
+        More a tag or key, as it will be used to address the corresponding widget.
+    label: str
+        Label to show in the GUI
+    type: ['int', 'short_text', 'long_text']
+        Indicator for the type of widget that should be generated in the GUI
+    default: Any
+        Default value in the GUI
+    minimum: float, default = 0
+        Minimum numerical value (only used if applicable)
+    maximum: float, default = 0
+        Maximum numerical value (only used if applicable)
+    step: float | None, default = None
+        TODO: not implemented
+    unit: str, default = ''
+        TODO: not implemented
+    options: list | None, default = None
+        TODO: not implemented
     
     """
     name: str
     label: str
-    type: str
+    type: Literal['int', 'short_text', 'long_text']
     default: Any
-    minimum: float | None = None
-    maximum: float | None = None
+    minimum: float = 0
+    maximum: float = 1e9
     step: float | None = None
     unit: str = ""
     options: list | None = None
