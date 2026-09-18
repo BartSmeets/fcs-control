@@ -1,7 +1,7 @@
 import logging
 import time
 
-from .base import Experiment, register_experiment
+from .base import Experiment, Parameter, register_experiment
 
 _logger = logging.getLogger(__name__)
 
@@ -11,12 +11,25 @@ class Test(Experiment):
     name = "Test"
     description = "Nothing here. Just for testing"
     required_devices = ()
+    parameters = (
+        Parameter('num', 'Number of Cycles', 'int', 0),
+        Parameter('short_text', 'Short Text Test', 'short_text', 'test'),
+        Parameter('long_text', 'Long Text Test', 'long_text', 'test'),
+        )
 
     def scan(self):
         start_time = time.time()
+        parameters = self.get_parameters()
 
-        for i in range(101):
-            if self.report_progress(i, 100, start_time):
+        num = parameters['num']
+        short = parameters['short_text']
+        long = parameters['long_text']
+
+        extra = (f"short text: {short}\n"
+                 f"long text: {long}")
+
+        for i in range(num):
+            if self.report_progress(i, num - 1, start_time, extra):
                 self.running = False
                 break
 
