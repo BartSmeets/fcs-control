@@ -7,9 +7,23 @@ Parameter: Class
     Class for communicating required parameters to the GUI
 Experiment: Class
     Class for defining the Experiment
+register_experiment: function
+    Add the experiment to the REGISTRY
 
 To define an experiment:
-Add an experiment file `<experiment>.py`, containing an `Experiment` class definition
+Add an experiment file `<experiment>.py`, containing an `Experiment` class definition with the `@register_experiment` decorator:
+
+```
+@register_experiment
+class Example(Experiment):
+    name = 'example'
+    description = 'This is an example'
+    required_devices = ('some_device',)
+    parameters = (Parameter('example', 'Example', 'int', 0),)
+
+    def scan(self):
+        (...)
+```
 
 """
 from __future__ import annotations

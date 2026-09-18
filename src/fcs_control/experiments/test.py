@@ -1,7 +1,7 @@
 import logging
 import time
 
-from .base import Experiment, Parameter, register_experiment
+from ..experiments import Experiment, Parameter, register_experiment
 
 _logger = logging.getLogger(__name__)
 

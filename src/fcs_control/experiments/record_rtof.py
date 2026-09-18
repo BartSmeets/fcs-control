@@ -1,6 +1,6 @@
 import time
 
-from .base import Experiment, Parameter, register_experiment
+from ..experiments import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
 _FREQUENCY = 10

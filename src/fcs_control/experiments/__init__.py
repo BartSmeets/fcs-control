@@ -1,7 +1,7 @@
 import importlib
 import pkgutil
 
-from .base import EXPERIMENT_REGISTRY, Experiment, Parameter, register_experiment
+from ._base import EXPERIMENT_REGISTRY, Experiment, Parameter, register_experiment
 
 __all__ = ["EXPERIMENT_REGISTRY", "Experiment", "Parameter", "register_experiment"]
 
