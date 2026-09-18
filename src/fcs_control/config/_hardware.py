@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from ..config._loader import load_toml
+from ._loader import load_toml
 
 
 class ScopeChannel(BaseModel):
