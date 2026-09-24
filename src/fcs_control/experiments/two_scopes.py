@@ -46,7 +46,7 @@ class IR_scan(Experiment):
             
             """
             primary = self.devices['primaryscope']
-            secondary = self.devices['secondary']
+            secondary = self.devices['secondaryscope']
             parameters = self.get_parameters()
     
             primary_sum = primary.read('CH1')
