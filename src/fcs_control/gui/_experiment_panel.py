@@ -104,8 +104,11 @@ class _ExperimentParameters(QFormLayout):
         parameters = experiment().all_parameters
         description = experiment.description
 
+        label = QLabel(f"Description: {description}")
+        label.setWordWrap(True)
+
         self._clear_rows()
-        self.addRow(QLabel(f"Description: {description}"))      
+        self.addRow(label)      
         self.addItem(QSpacerItem(0, 20, QSizePolicy.Minimum, QSizePolicy.Fixed))        
         for parameter in parameters:
             widget = build_widget(parameter)

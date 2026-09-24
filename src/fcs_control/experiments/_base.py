@@ -72,12 +72,15 @@ class Parameter:
         Minimum numerical value (only used if applicable)
     maximum: float, default = 0
         Maximum numerical value (only used if applicable)
+    decimals: int, default = 1
+        Number of decimals for floating spinboxes
+    options: list | None, default = None
+        List of options to show in combobox
     step: float | None, default = None
         TODO: not implemented
     unit: str, default = ''
         TODO: not implemented
-    options: list | None, default = None
-        TODO: not implemented
+    
     
     """
     name: str
@@ -86,9 +89,10 @@ class Parameter:
     default: Any
     minimum: float = 0
     maximum: float = 1e9
+    decimals: int = 1
     step: float | None = None
     unit: str = ""
-    options: list | None = None
+    options: list[str] | None = None
 
 
 class _ScanWorker(QObject):
@@ -208,11 +212,38 @@ class Experiment(ABC):
     on a background thread (so the GUI stays responsive),
     and allows the user to provide a final comment to be logged.
 
+    Attributes
+    ----------
+    name: str, default = ""
+        name/key of the experiment
+    description: str, default = ""
+        Description of the experiment
+        to be shown in the GUI
+    required_devices: tuple[str]
+        Tuple of the containing the keys of the required devices
+    parameters: tuple[type[Parameter]]
+        Tuple containing the parameter settings
+        for the widgets that should be generated in the GUI
+    data_folder: str, default = None
+        Folder for data storage. 
+        Will be generated during run
+    settings: dict
+        Settings taken from the GUI panels
+
+    Methods
+    -------
+    validate_device
+            Check if the required devices are connected
+    get_parameters
+        Read the experimental parameters
+    report_progress
+        Report progress to the progress bar
+
     """
     # Has to be defined manually
     name: str = ""
     description: str = ""
-    required_devices: tuple = ()
+    required_devices: tuple[str] = ()
     parameters: tuple[type[Parameter]] = ()
 
     # Every experiment must have a title and comment

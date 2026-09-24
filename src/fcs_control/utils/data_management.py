@@ -55,7 +55,7 @@ def data_folder(parent_window = None):
 
 def file_name(data_folder: Path, title: str) -> str:
     """
-    Determine filename: add a counter if file already exists
+    Determine filename: add a counter if (log) file already exists
 
     Parameters
     ----------
