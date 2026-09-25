@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 
 _YAG = 1064.46   # YAG Wavelength
 _WAIT = 2.0  # Waiting time in seconds (s)
-_TIMEOUT = 60.0 # seconds (s)
+_TIMEOUT = 300.0 # seconds (s) -> 5 min
 
 
 class Opoopa:
@@ -51,7 +51,7 @@ class Opoopa:
     _ip = NETWORK.laser_vision_ip
     _port = str(HARDWARE.laser_vision.port)
 
-    mode: Literal['NIR', 'IIR', 'MIR']
+    mode: Literal['NIR', 'IIR', 'MIR'] = 'NIR'
 
     def __init__(self):
         """
@@ -59,7 +59,7 @@ class Opoopa:
         to test if the OPO/OPA is connected
 
         """
-        _ = self.read_wavelength()
+        self._read_nir()
 
     def goto_wavelength(self, wavelength: float, timeout: float = _TIMEOUT) -> None:
         """
@@ -131,7 +131,7 @@ class Opoopa:
 
     def is_alive(self) -> bool:
         try:
-            self._verify_connection()
+            self._read_nir()
             return True
         except (FileNotFoundError, PermissionError, OSError) as e:
             _logger.warning(f"Failed to launch MotorSendCmd.exe: {e}")
@@ -197,11 +197,12 @@ class Opoopa:
             check = False,
             )
         
-        if result.returncode == 0:
+        try:
             return float(result.stdout)
-        else:
+        except ValueError as e:
             raise RuntimeError(
-                f"MSC exited with returncode {result.returncode}")
+                f"Unexpected response from OPO/OPA: {result.stdout!r}"
+                ) from e
 
     def _wavelength2nir(self, wavelength: float) -> float:
         """
