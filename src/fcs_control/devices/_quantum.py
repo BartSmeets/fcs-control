@@ -9,8 +9,8 @@ import logging
 import string
 import time
 
-from ..config import HARDWARE
-from ..utils.visa import get_resource_manager, get_resources
+from fcs_control.config import HARDWARE
+from fcs_control.utils.visa import get_resource_manager, get_resources
 
 _LETTER_LIST = string.ascii_uppercase[:8]
 

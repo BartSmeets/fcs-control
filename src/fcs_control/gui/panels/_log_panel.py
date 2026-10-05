@@ -6,7 +6,7 @@ import logging
 
 from PySide6.QtWidgets import QPlainTextEdit
 
-from ..utils.logging import QTextEditHandler
+from fcs_control.utils.logging import QTextEditHandler
 
 
 class LogPanel(QPlainTextEdit):

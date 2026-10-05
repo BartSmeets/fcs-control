@@ -8,7 +8,7 @@ import subprocess
 import time
 from typing import Literal
 
-from ..config import HARDWARE, NETWORK
+from fcs_control.config import HARDWARE, NETWORK
 
 _logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QMessageBox
 
-from ..config import NETWORK
+from fcs_control.config import NETWORK
 
 _logger = logging.getLogger(__name__)
 

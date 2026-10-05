@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...experiments import Parameter
+from fcs_control.experiments import Parameter
 
 
 def build_widget(param: Parameter) -> QWidget:

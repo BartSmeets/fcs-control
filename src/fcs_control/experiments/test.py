@@ -1,7 +1,7 @@
 import logging
 import time
 
-from ..experiments import Experiment, Parameter, register_experiment
+from fcs_control.experiments import Experiment, Parameter, register_experiment
 
 _logger = logging.getLogger(__name__)
 

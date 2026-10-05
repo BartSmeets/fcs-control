@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
     QSpacerItem,
 )
 
-from ..experiments import EXPERIMENT_REGISTRY, Experiment, Parameter
+from fcs_control.experiments import EXPERIMENT_REGISTRY, Experiment, Parameter
+
 from .utils._parameter_widgets import build_widget, get_value
 
 

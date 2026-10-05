@@ -9,12 +9,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..devices import get_device_manager
-from ._delay_panel import DelayPanel
-from ._experiment_panel import ExperimentPanel
-from ._log_panel import LogPanel
+from fcs_control.devices import get_device_manager
+
 from ._menu_bar import MenuBar
-from ._voltage_panel import VoltagePanel
+from .panels._delay_panel import DelayPanel
+from .panels._experiment_panel import ExperimentPanel
+from .panels._log_panel import LogPanel
+from .panels._voltage_panel import VoltagePanel
 
 
 class MainWindow(QMainWindow):

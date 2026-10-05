@@ -10,8 +10,8 @@ from struct import unpack
 import numpy as np
 import pyvisa
 
-from ..config import CHANNEL, HARDWARE
-from ..utils.visa import get_resource_manager, get_resources
+from fcs_control.config import CHANNEL, HARDWARE
+from fcs_control.utils.visa import get_resource_manager, get_resources
 
 _logger = logging.getLogger(__name__)
 

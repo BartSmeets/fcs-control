@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from ..experiments import Experiment, Parameter, register_experiment
+from fcs_control.experiments import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
 _FREQUENCY = 10
