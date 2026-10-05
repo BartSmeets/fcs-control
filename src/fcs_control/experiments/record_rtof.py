@@ -24,21 +24,17 @@ class Record_RTOF(Experiment):
         num = parameters['num']
         scope = self.devices['primaryscope']
 
-        datasum = None
+        self.report_progress(0, num, start_time)
+        datasum = scope.read('CH1')
         
-        for i in range(num):
+        for i in range(1, num):
             if self.report_progress(i, num, start_time):
                 break
 
             # Read scope
             time.sleep(_SCOPE_AVERAGES / _FREQUENCY)    # Wait until scope averaging is fully refreshed
             data = scope.read('CH1')
-
-            # Collect Data
-            if datasum is None:
-                datasum = data.copy()
-            else:
-                datasum[:, 1] += data[:, 1]
+            datasum[:, 1] += data[:, 1]
 
         np.save(self.data_folder / f"{self.filename}.npy", datasum)
         return datasum

@@ -8,6 +8,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
+from ._opoopa import Opoopa
 from ._quantum import Quantum
 from ._scope import Scope
 
@@ -30,6 +31,12 @@ DEVICE_CLS = {
                 "description": "Secondary MDO34 Scope",
                 "occupied": False,
             },
+            "opoopa": {
+                "class": Opoopa,
+                "kwargs": {},
+                "description": "OPO/OPA System",
+                "occupied": False,
+            },
         }
 
 _logger = logging.getLogger(__name__)
@@ -38,6 +45,7 @@ class DeviceManager:
     quantum: Quantum | None
     primaryscope: Scope | None
     secondaryscope: Scope | None
+    opoopa: Opoopa | None
 
     def __init__(self):
         """

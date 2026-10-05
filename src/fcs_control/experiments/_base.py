@@ -72,12 +72,15 @@ class Parameter:
         Minimum numerical value (only used if applicable)
     maximum: float, default = 0
         Maximum numerical value (only used if applicable)
+    decimals: int, default = 1
+        Number of decimals for floating spinboxes
+    options: list | None, default = None
+        List of options to show in combobox
     step: float | None, default = None
         TODO: not implemented
     unit: str, default = ''
         TODO: not implemented
-    options: list | None, default = None
-        TODO: not implemented
+    
     
     """
     name: str
@@ -86,9 +89,10 @@ class Parameter:
     default: Any
     minimum: float = 0
     maximum: float = 1e9
+    decimals: int = 1
     step: float | None = None
     unit: str = ""
-    options: list | None = None
+    options: list[str] | None = None
 
 
 class _ScanWorker(QObject):
@@ -176,6 +180,7 @@ class _ScanRunner(QObject):
 
     @Slot()
     def _on_cancel(self):
+        _logger.info("Scan has been aborted")
         self.experiment._cancel_requested = True
 
     @Slot(int, int, str)
@@ -208,11 +213,38 @@ class Experiment(ABC):
     on a background thread (so the GUI stays responsive),
     and allows the user to provide a final comment to be logged.
 
+    Attributes
+    ----------
+    name: str, default = ""
+        name/key of the experiment
+    description: str, default = ""
+        Description of the experiment
+        to be shown in the GUI
+    required_devices: tuple[str]
+        Tuple of the containing the keys of the required devices
+    parameters: tuple[type[Parameter]]
+        Tuple containing the parameter settings
+        for the widgets that should be generated in the GUI
+    data_folder: str, default = None
+        Folder for data storage. 
+        Will be generated during run
+    settings: dict
+        Settings taken from the GUI panels
+
+    Methods
+    -------
+    validate_device
+            Check if the required devices are connected
+    get_parameters
+        Read the experimental parameters
+    report_progress
+        Report progress to the progress bar
+
     """
     # Has to be defined manually
     name: str = ""
     description: str = ""
-    required_devices: tuple = ()
+    required_devices: tuple[str] = ()
     parameters: tuple[type[Parameter]] = ()
 
     # Every experiment must have a title and comment
@@ -231,8 +263,19 @@ class Experiment(ABC):
     data_folder: str | None = None
 
     def __init__(self, main_window: MainWindow | None = None):
-        self.main_window = main_window
+        if main_window is not None:
+            self.main_window = main_window
+
+            # Validate devices
+            try:
+                self.validate_devices()
+            except (OSError, RuntimeError) as e:
+                _logger.exception("Device Error")
+                QMessageBox.warning(self.main_window, "Device Error", str(e))
+                return
+
         try:
+            main_window.delay_panel.refresh()
             self.settings = main_window.get_all_settings()
         except AttributeError:
             self.settings = {}
@@ -417,18 +460,6 @@ class Experiment(ABC):
         # Intiate and Maintain Logbook
         save_production_settings(self.data_folder, self.filename, self.settings)
         with self._file_logging(self.data_folder / f"{self.filename}_log.txt"):
-
-            # Validate devices
-            try:
-                self.validate_devices()
-            except (OSError, RuntimeError) as e:
-                _logger.exception("Device Error")
-                QMessageBox.warning(self.main_window, "Device Error", str(e))
-                return
-
-            # Run Scan on a background thread
-            _logger.info("Scan started")
-
             with ExitStack() as stack:
                 self.devices = {}
                 dm = get_device_manager()
@@ -443,6 +474,8 @@ class Experiment(ABC):
             
                 self._cancel_requested = False
 
+                # Run Scan on a background thread
+                _logger.info("Scan started")
                 runner = _ScanRunner(self)
                 self.result = runner.run()
 

@@ -5,6 +5,7 @@ class NetworkSecrets(BaseSettings):
     laser_vision_ip: str
     data_folder: str
     no_network_folder: str
+    msc_address: str
 
     model_config = SettingsConfigDict(env_file=".env")
 
