@@ -5,7 +5,7 @@ import numpy as np
 from ..experiments import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
-_FREQUENCY = 10
+_FREQUENCY = 5
 
 @register_experiment
 class IR_scan(Experiment):
@@ -20,6 +20,12 @@ class IR_scan(Experiment):
                         'opoopa',)
 
     parameters = (
+        Parameter('mode', 
+                  "Mode", 
+                  'option', 
+                  'NIR', 
+                  options=['NIR', 'IIR', 'MIR']
+                  ),
         Parameter('unit', 
                   "Unit of the IR Values", 
                   'option', 
@@ -49,17 +55,19 @@ class IR_scan(Experiment):
 
     def scan(self):
         start_time = time.time()
+        parameters = self.get_parameters()
 
         opoopa = self.devices['opoopa']
-
-        parameters = self.get_parameters()
+        opoopa.mode = parameters['mode']
+        
         unit = parameters['unit']
         start = parameters['start']
         stop = parameters['stop']
         step = parameters['step']
         num = parameters['num']
 
-        self.data_folder = self.data_folder / self.filename
+        data_folder = self.data_folder / self.filename 
+        data_folder.mkdir(exist_ok=True)
 
         if start > stop:
             waves = np.arange(start, stop + 0.1*step, -step)
@@ -71,19 +79,19 @@ class IR_scan(Experiment):
 
         # Scan Wavenumber
         for i, wavelength in enumerate(waves):
-            extra = (f"Current wavelength: {wavelength:.1f} nm"
-                     f"Current wavenumber: {1e7/wavelength:.1f} cm⁻¹"
-                     f"num: 0/{num} ")
+            extra = (f"Current wavelength: {wavelength:.1f} nm\n"
+                     f"Current wavenumber: {1e7/wavelength:.1f} cm⁻¹\n"
+                     f"num: 0/{num}")
             if self.report_progress(i, len(waves), start_time, extra):
                 break
 
             opoopa.goto_wavelength(wavelength)
-            wavelength = opoopa.read_wavelength
+            wavelength = opoopa.read_wavelength()
 
             primary_sum, secondary_sum = self._read_cycles(waves, i, start_time)
 
-            np.save(self.data_folder / f"{self.filename}_{wavelength}nm_prime.npy", primary_sum)
-            np.save(self.data_folder / f"{self.filename}_{wavelength}nm_secon.npy", secondary_sum)
+            np.save(data_folder / f"{self.filename}_{wavelength}nm_prime.npy", primary_sum)
+            np.save(data_folder / f"{self.filename}_{wavelength}nm_secon.npy", secondary_sum)
 
     def _read_cycles(self, waves: np.ndarray, index: int, start_time: float):
         """
@@ -108,17 +116,17 @@ class IR_scan(Experiment):
 
         """
         primary = self.devices['primaryscope']
-        secondary = self.devices['secondary']
+        secondary = self.devices['secondaryscope']
         parameters = self.get_parameters()
 
         primary_sum = primary.read('CH1')
         secondary_sum = secondary.read('CH1')
 
         for j in range(1, parameters['num']):
-            extra = (f"Current wavelength: {waves[index]:.1f} nm"
-                     f"Current wavenumber: {1e7/waves[index]:.1f} cm⁻¹"
-                     f"num: {j}/{parameters['num']} ")
-            if self.report_progress(j, len(waves), start_time, extra):
+            extra = (f"Current wavelength: {waves[index]:.1f} nm\n"
+                     f"Current wavenumber: {1e7/waves[index]:.1f} cm⁻¹\n"
+                     f"num: {j}/{parameters['num']}")
+            if self.report_progress(index, len(waves), start_time, extra):
                 break
 
             # Read scopes

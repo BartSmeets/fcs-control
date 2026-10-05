@@ -180,6 +180,7 @@ class _ScanRunner(QObject):
 
     @Slot()
     def _on_cancel(self):
+        _logger.info("Scan has been aborted")
         self.experiment._cancel_requested = True
 
     @Slot(int, int, str)
