@@ -262,8 +262,19 @@ class Experiment(ABC):
     data_folder: str | None = None
 
     def __init__(self, main_window: MainWindow | None = None):
-        self.main_window = main_window
+        if main_window is not None:
+            self.main_window = main_window
+
+            # Validate devices
+            try:
+                self.validate_devices()
+            except (OSError, RuntimeError) as e:
+                _logger.exception("Device Error")
+                QMessageBox.warning(self.main_window, "Device Error", str(e))
+                return
+
         try:
+            main_window.delay_panel.refresh()
             self.settings = main_window.get_all_settings()
         except AttributeError:
             self.settings = {}
@@ -448,18 +459,6 @@ class Experiment(ABC):
         # Intiate and Maintain Logbook
         save_production_settings(self.data_folder, self.filename, self.settings)
         with self._file_logging(self.data_folder / f"{self.filename}_log.txt"):
-
-            # Validate devices
-            try:
-                self.validate_devices()
-            except (OSError, RuntimeError) as e:
-                _logger.exception("Device Error")
-                QMessageBox.warning(self.main_window, "Device Error", str(e))
-                return
-
-            # Run Scan on a background thread
-            _logger.info("Scan started")
-
             with ExitStack() as stack:
                 self.devices = {}
                 dm = get_device_manager()
@@ -474,6 +473,8 @@ class Experiment(ABC):
             
                 self._cancel_requested = False
 
+                # Run Scan on a background thread
+                _logger.info("Scan started")
                 runner = _ScanRunner(self)
                 self.result = runner.run()
 

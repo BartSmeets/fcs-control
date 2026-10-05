@@ -130,7 +130,7 @@ class _DelayGenBox(QGroupBox):
             # Column 2: delay value input
             delay_spin = QDoubleSpinBox()
             delay_spin.setRange(-1e6, 1e6)
-            delay_spin.setDecimals(1)
+            delay_spin.setDecimals(3)
             delay_spin.setSingleStep(0.1)
             delay_spin.setEnabled(False)
             layout.addWidget(delay_spin, row, 1)
