@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fcs-control"
 version = "0.1.0"
-description = "Control software for the FCS experimental setup"
+description = "Software for running experiments and logging on the FCS setup"
 readme = "README.md"
 requires-python = ">=3.12"
 
@@ -21,7 +21,7 @@ dependencies = [
     "pyvisa",
 ]
 
-[project.scripts]
+[project.gui-scripts]
 fcs-control = "fcs_control.__main__:main"
 
 [tool.setuptools]
