@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fcs-control"
-version = "0.1.0"
+version = "1.0.0"
 description = "Software for running experiments and logging on the FCS setup"
 readme = "README.md"
 requires-python = ">=3.12"
