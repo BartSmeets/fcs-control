@@ -5,7 +5,7 @@ Build MenuBar
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenuBar
 
-from ..devices import get_device_manager
+from fcs_control.devices import get_device_manager
 
 
 class MenuBar(QMenuBar):

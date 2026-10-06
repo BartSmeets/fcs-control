@@ -40,9 +40,13 @@ from typing import TYPE_CHECKING, Any, Literal
 from PySide6.QtCore import QEventLoop, QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QDialog, QMessageBox, QProgressDialog
 
-from ..devices._device_manager import get_device_manager
-from ..gui.popup import CommentBox
-from ..utils.data_management import data_folder, file_name, save_production_settings
+from fcs_control.devices import get_device_manager
+from fcs_control.gui.popup import CommentBox
+from fcs_control.utils.data_management import (
+    data_folder,
+    file_name,
+    save_production_settings,
+)
 
 if TYPE_CHECKING:
     from ..gui import MainWindow  # adjust relative path
@@ -180,7 +184,7 @@ class _ScanRunner(QObject):
 
     @Slot()
     def _on_cancel(self):
-        _logger.info("Scan has been aborted")
+        _logger.info("Abort requested")
         self.experiment._cancel_requested = True
 
     @Slot(int, int, str)

@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
-from src.fcs_control.gui import MainWindow
+from fcs_control.gui import MainWindow
 
 
 # Run Application

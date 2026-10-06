@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from ..devices import get_device_manager
+from fcs_control.devices import get_device_manager
 
 # ====================
 # Registry: Add new delay generators and their available channels here

@@ -3,12 +3,32 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fcs_control"
-version = "0.1.0"
-authors=[{name='Bart J. B. Smeets', email='bart.smeets.qsp@kuleuven.be'}]
+name = "fcs-control"
+version = "1.0.0"
+description = "Software for running experiments and logging on the FCS setup"
+readme = "README.md"
+requires-python = ">=3.12"
+
+authors = [
+    { name = "Bart J. B. Smeets", email = "bart.smeets.qsp@kuleuven.be" }
+]
+
+dependencies = [
+    "numpy",
+    "pydantic",
+    "pydantic-settings",
+    "PySide6",
+    "pyvisa",
+]
+
+[project.gui-scripts]
+fcs-control = "fcs_control.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+fcs_control = ["configs/*.toml"]

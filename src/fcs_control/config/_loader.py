@@ -1,10 +1,10 @@
-from pathlib import Path
+from importlib.resources import files
 
 import tomllib
 
-CONFIG_DIR = Path(__file__).parent.parent.parent.parent / "configs"
 
 def load_toml(name: str) -> dict:
-    path = CONFIG_DIR / f"{name}.toml"
+    path = files("fcs_control.configs").joinpath(f"{name}.toml")
+
     with open(path, "rb") as f:
         return tomllib.load(f)
