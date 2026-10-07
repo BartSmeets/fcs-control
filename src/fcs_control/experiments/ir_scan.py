@@ -1,11 +1,10 @@
-import time
-
 import numpy as np
 
 from fcs_control.experiments import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
 _FREQUENCY = 5
+_MOVE_TIME = 5.0    # rough guess for goto_wavelength; the clock corrects it
 
 @register_experiment
 class IR_scan(Experiment):
@@ -54,90 +53,57 @@ class IR_scan(Experiment):
     )
 
     def scan(self):
-        start_time = time.time()
-        parameters = self.get_parameters()
-
+        p = self.get_parameters()
         opoopa = self.devices['opoopa']
-        opoopa.mode = parameters['mode']
-        
-        unit = parameters['unit']
-        start = parameters['start']
-        stop = parameters['stop']
-        step = parameters['step']
-        num = parameters['num']
+        opoopa.mode = p['mode']
+        num = p['num']
 
-        data_folder = self.data_folder / self.filename 
+        data_folder = self.data_folder / self.filename
         data_folder.mkdir(exist_ok=True)
 
-        if start > stop:
-            waves = np.arange(start, stop + 0.1*step, -step)
-        else:
-            waves = np.arange(start, stop + 0.1*step, step)
-
-        if unit == 'cm-1':
+        start, stop, step = p['start'], p['stop'], p['step']
+        sign = -1 if start > stop else 1
+        waves = np.arange(start, stop + 0.1 * step, sign * step)
+        if p['unit'] == 'cm-1':
             waves = 1e7 / waves
 
-        # Scan Wavenumber
-        for i, wavelength in enumerate(waves):
-            extra = (f"Current wavelength: {wavelength:.1f} nm\n"
-                     f"Current wavenumber: {1e7/wavelength:.1f} cm⁻¹\n"
-                     f"num: 0/{num}")
-            if self.report_progress(i, len(waves), start_time, extra):
-                break
+        def wavelength_info(wl):
+            if wl is None:
+                return ""
+            return (f"Current wavelength: {wl:.1f} nm\n"
+                    f"Current wavenumber: {1e7 / wl:.1f} cm⁻¹")
 
+        per_wavelength = _MOVE_TIME + num * _SCOPE_AVERAGES / _FREQUENCY
+
+        for wavelength in self.track(waves, step_time=per_wavelength, extra=wavelength_info):
             opoopa.goto_wavelength(wavelength)
-            wavelength = opoopa.read_wavelength()
+            actual = opoopa.read_wavelength()
 
-            primary_sum, secondary_sum = self._read_cycles(waves, i, start_time)
+            sums = self._read_cycles(num)
+            if sums is None:          # aborted mid-wavelength: don't save partial data
+                break
+            primary_sum, secondary_sum = sums
 
-            np.save(data_folder / f"{self.filename}_{wavelength}nm_prime.npy", primary_sum)
-            np.save(data_folder / f"{self.filename}_{wavelength}nm_secon.npy", secondary_sum)
+            np.save(data_folder / f"{self.filename}_{actual}nm_prime.npy", primary_sum)
+            np.save(data_folder / f"{self.filename}_{actual}nm_secon.npy", secondary_sum)
 
-    def _read_cycles(self, waves: np.ndarray, index: int, start_time: float):
-        """
-        Read the requested number of cycles from the scopes.
-        The parameters are only used for updating the progress bar.
 
-        Parameters
-        ----------
-        waves: ndarray
-            Array containing the requested wavelengths.
-        index: int
-            Index of the current wavelength within `waves`
-        start_time: float
-            Start time of the full experiment
-        
-        Returns
-        -------
-        primary_sum: ndarray
-            Array containing the summed data of the primary scope
-        secondary_sum:
-            Array containing the summed data of the primary scope            
-
-        """
+    def _read_cycles(self, num: int):
         primary = self.devices['primaryscope']
         secondary = self.devices['secondaryscope']
-        parameters = self.get_parameters()
+        primary_sum = secondary_sum = None
 
-        primary_sum = primary.read('CH1')
-        secondary_sum = secondary.read('CH1')
+        for _ in self.track(range(num), extra=lambda j: f"Cycle: {j + 1}/{num}"):
+            self.sleep(_SCOPE_AVERAGES / _FREQUENCY)   # wait for averaging to refresh
+            data_p = primary.read('CH1')
+            data_s = secondary.read('CH1')
+            if primary_sum is None:
+                primary_sum, secondary_sum = data_p, data_s
+            else:
+                primary_sum[:, 1] += data_p[:, 1]
+                secondary_sum[:, 1] += data_s[:, 1]
 
-        for j in range(1, parameters['num']):
-            extra = (f"Current wavelength: {waves[index]:.1f} nm\n"
-                     f"Current wavenumber: {1e7/waves[index]:.1f} cm⁻¹\n"
-                     f"num: {j}/{parameters['num']}")
-            if self.report_progress(index, len(waves), start_time, extra):
-                break
-
-            # Read scopes
-            time.sleep(_SCOPE_AVERAGES / _FREQUENCY)    # Wait until scope averaging is fully refreshed
-            data_primary = primary.read('CH1')
-            data_secondary = secondary.read('CH1')
-
-            primary_sum[:, 1] += data_primary[:, 1]
-            secondary_sum[:, 1] += data_secondary[:, 1]
-
-        return primary_sum, secondary_sum
+        return None if self.cancel_requested else (primary_sum, secondary_sum)
 
 
 

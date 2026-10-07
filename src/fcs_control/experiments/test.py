@@ -1,5 +1,4 @@
 import logging
-import time
 
 from fcs_control.experiments import Experiment, Parameter, register_experiment
 
@@ -18,19 +17,15 @@ class Test(Experiment):
         )
 
     def scan(self):
-        start_time = time.time()
         parameters = self.get_parameters()
 
         num = parameters['num']
         short = parameters['short_text']
         long = parameters['long_text']
 
-        extra = (f"short text: {short}\n"
-                 f"long text: {long}")
+        extra = lambda j: (f"Cycle: {j+1}/{num}\n"
+                           f"short text: {short}\n"
+                           f"long text: {long}")
 
-        for i in range(num):
-            if self.report_progress(i, num - 1, start_time, extra):
-                self.running = False
-                break
-
-            time.sleep(0.05)
+        for _ in self.track(range(num), step_time=0.05, extra=extra):
+            self.sleep(0.05)
