@@ -1,11 +1,10 @@
-import time
-
 import numpy as np
 
 from fcs_control.experiments import Experiment, Parameter, register_experiment
 
 _SCOPE_AVERAGES = 32
 _FREQUENCY = 10
+_STEP_TIME = _SCOPE_AVERAGES / _FREQUENCY
 
 @register_experiment
 class Record_RTOF(Experiment):
@@ -18,23 +17,25 @@ class Record_RTOF(Experiment):
     )
 
     def scan(self):
-        start_time = time.time()
         parameters = self.get_parameters()
 
         num = parameters['num']
         scope = self.devices['primaryscope']
 
-        self.report_progress(0, num, start_time)
-        datasum = scope.read('CH1')
+        datasum = None
         
-        for i in range(1, num):
-            if self.report_progress(i, num, start_time):
-                break
+        for _ in self.track(range(num), step_time=_STEP_TIME, extra=lambda j: f"Cycle: {j+1}/{num}"):
 
             # Read scope
-            time.sleep(_SCOPE_AVERAGES / _FREQUENCY)    # Wait until scope averaging is fully refreshed
+            self.sleep(_SCOPE_AVERAGES / _FREQUENCY)    # Wait until scope averaging is fully refreshed
             data = scope.read('CH1')
-            datasum[:, 1] += data[:, 1]
+            if datasum is None:
+                datasum = data
+            else:
+                datasum[:, 1] += data[:, 1]
+
+        if datasum is None:
+            return None
 
         np.save(self.data_folder / f"{self.filename}.npy", datasum)
         return datasum
