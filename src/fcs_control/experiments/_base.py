@@ -184,6 +184,8 @@ class _ScanRunner(QObject):
 
     @Slot()
     def _on_cancel(self):
+        if not self.thread.isRunning():
+            return
         _logger.info("Abort requested")
         self.experiment._cancel_requested = True
 

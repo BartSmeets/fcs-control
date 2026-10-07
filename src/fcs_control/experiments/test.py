@@ -30,7 +30,6 @@ class Test(Experiment):
 
         for i in range(num):
             if self.report_progress(i, num - 1, start_time, extra):
-                self.running = False
                 break
 
             time.sleep(0.05)
