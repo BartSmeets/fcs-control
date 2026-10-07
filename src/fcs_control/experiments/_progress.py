@@ -74,6 +74,20 @@ class _Estimator:
         return total * (1 - fraction)
 
 
+@dataclass(frozen=True)
+class _Snapshot:
+    """
+    The state at the last progress update.
+
+    Lets the GUI re-render the time labels between updates (see
+    `ProgressTracker.render`) without touching the loops of the scan thread.
+    """
+    fraction: float
+    remaining: float | None     # seconds remaining at `stamp`
+    stamp: float                # time.monotonic() of the update
+    extras: tuple[str, ...]     # extra lines, already evaluated on the scan thread
+
+
 @dataclass
 class _Frame:
     """State of one active `track()` loop."""
@@ -100,6 +114,7 @@ class ProgressTracker:
         self._cancel = threading.Event()   # thread-safe, unlike a plain bool
         self._frames: list[_Frame] = []
         self._estimator: _Estimator | None = None
+        self._snapshot: _Snapshot | None = None
 
     # ------------------------------------------------------------------
     # Cancellation
@@ -109,6 +124,7 @@ class ProgressTracker:
         self._cancel.clear()
         self._frames.clear()
         self._estimator = None
+        self._snapshot = None
 
     def request_cancel(self):
         """Ask the running scan to stop. Safe to call from any thread."""
@@ -181,19 +197,47 @@ class ProgressTracker:
         return min(fraction, 1.0)
 
     def _publish(self):
+        """Store a new snapshot (scan thread) and hand it to `on_update`."""
         if self.on_update is None or self._estimator is None:
             return
         fraction = self._fraction()
-        remaining = self._estimator.remaining(fraction)
-
-        lines = [
-            f"Elapsed time: {format_duration(self._estimator.elapsed())}",
-            "Estimated remaining time: "
-            + (format_duration(remaining) if remaining is not None else "estimating..."),
-        ]
+        extras = []
         for frame in self._frames:          # outer -> inner
             extra = frame.extra(frame.item) if callable(frame.extra) else frame.extra
             if extra:
-                lines.append(extra)
+                extras.append(extra)
+        self._snapshot = _Snapshot(
+            fraction=fraction,
+            remaining=self._estimator.remaining(fraction),
+            stamp=time.monotonic(),
+            extras=tuple(extras),
+        )
+        self.on_update(*self.render())
 
-        self.on_update(int(fraction * PROGRESS_SCALE), "\n".join(lines))
+    def render(self) -> tuple[int, str] | None:
+        """
+        The progress value and label as they look right now.
+
+        Safe to call from the GUI thread. The GUI calls it on a timer, so the
+        elapsed time keeps counting, and the remaining time keeps counting
+        down, during a long step. The estimate itself is only recalculated
+        when a step starts or finishes.
+
+        Returns None before the first update.
+
+        """
+        snapshot, estimator = self._snapshot, self._estimator   # one consistent read
+        if snapshot is None or estimator is None:
+            return None
+
+        remaining = snapshot.remaining
+        if remaining is not None:
+            remaining = max(0.0, remaining - (time.monotonic() - snapshot.stamp))
+
+        lines = [
+            f"Elapsed time: {format_duration(estimator.elapsed())}",
+            "Estimated remaining time: "
+            + (format_duration(remaining) if remaining is not None else "estimating..."),
+            *snapshot.extras,
+        ]
+        return int(snapshot.fraction * PROGRESS_SCALE), "\n".join(lines)

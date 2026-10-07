@@ -85,11 +85,11 @@ User-configurable inputs are defined through the `Parameter` class and are autom
 
 The machinery behind this is split over three files in the `experiments` folder, none of which needs to be touched when writing an experiment:
 
-| File           | Purpose                                                                    |
-| -------------- | -------------------------------------------------------------------------- |
+| File           | Purpose                                                                  |
+| -------------- | ------------------------------------------------------------------------ |
 | `_base.py`     | `Parameter`, `Experiment` (data folder, logbook, devices) and the registry |
-| `_progress.py` | Progress tracking, time estimation and abort handling (`self.track()`)     |
-| `_runner.py`   | Runs `scan()` on a background thread behind the progress dialog            |
+| `_progress.py` | Progress tracking, time estimation and abort handling (`self.track()`)   |
+| `_runner.py`   | Runs `scan()` on a background thread behind the progress dialog          |
 
 ```python
 from fcs_control.experiments import Experiment, Parameter, register_experiment
@@ -118,18 +118,18 @@ class Example(Experiment):
 
 ##### Parameter Options
 
-| Attribute  | Type                                                          | Description                                                                             |
-| ---------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `name`     | `str`                                                         | Internal parameter name. Used as the key when retrieving parameter values.              |
-| `label`    | `str`                                                         | Human-readable label shown in the GUI.                                                  |
-| `type`     | `'int'`, `'float'`, `'short_text'`, `'long_text'`, `'option'` | Determines which input widget is generated.                                             |
-| `default`  | `Any`                                                         | Default value shown in the GUI.                                                         |
-| `minimum`  | `float`                                                       | Minimum allowed numerical value (if applicable). Default: `0`.                          |
-| `maximum`  | `float`                                                       | Maximum allowed numerical value (if applicable). Default: `1e9`.                        |
-| `decimals` | `int`                                                         | Number of decimal places for floating-point spin boxes. Default: `1`.                   |
-| `options`  | `list[str] \| None`                                           | List of selectable values shown in a combo box. Default: `None`.                        |
-| `step`     | `float \| None`                                               | Step size for numerical widgets. Currently, not implemented.                            |
-| `unit`     | `str`                                                         | Physical unit associated with the parameter. Currently, not implemented. Default: `''`. |
+| Attribute  | Type                                                           | Description                                                                             |
+| ---------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `name`     | `str`                                                          | Internal parameter name. Used as the key when retrieving parameter values.              |
+| `label`    | `str`                                                          | Human-readable label shown in the GUI.                                                  |
+| `type`     | `'int'`, `'float'`, `'short_text'`, `'long_text'`, `'option'`  | Determines which input widget is generated.                                             |
+| `default`  | `Any`                                                          | Default value shown in the GUI.                                                         |
+| `minimum`  | `float`                                                        | Minimum allowed numerical value (if applicable). Default: `0`.                          |
+| `maximum`  | `float`                                                        | Maximum allowed numerical value (if applicable). Default: `1e9`.                        |
+| `decimals` | `int`                                                          | Number of decimal places for floating-point spin boxes. Default: `1`.                   |
+| `options`  | `list[str] \| None`                                            | List of selectable values shown in a combo box. Default: `None`.                        |
+| `step`     | `float \| None`                                                | Step size for numerical widgets. Currently, not implemented.                            |
+| `unit`     | `str`                                                          | Physical unit associated with the parameter. Currently, not implemented. Default: `''`. |
 
 ##### Automatic parameters
 
@@ -218,16 +218,18 @@ def scan(self):
         self.sleep(3.2)     # the work for one step
 ```
 
+The elapsed and remaining time in the dialog refresh every second, also during a long step. The estimate itself is recalculated whenever a step starts or finishes.
+
 When the user presses Abort, the loop simply ends. No exception is raised, so the code after the loop still runs and can save partial results or clean up.
 
 ##### `track()` arguments
 
-| Argument    | Description                                                                                                                                                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `iterable`  | What to loop over, e.g. `range(num)` or an array of wavelengths.                                                                                                                                                                            |
-| `total`     | Number of items. Defaults to `len(iterable)`. Required for generators.                                                                                                                                                                      |
+| Argument    | Description                                                                                                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `iterable`  | What to loop over, e.g. `range(num)` or an array of wavelengths.                                                                                                                                             |
+| `total`     | Number of items. Defaults to `len(iterable)`. Required for generators.                                                                                                                                       |
 | `step_time` | Expected seconds per item, including everything nested inside it. Optional. Only used on the outermost loop, to give a sensible time estimate from the start. A rough value is enough: the measured pace takes over as the scan progresses. |
-| `extra`     | Text shown in the dialog while this loop is active. Either a string, or a function that takes the current item and returns a string (for live read-outs).                                                                                   |
+| `extra`     | Text shown in the dialog while this loop is active. Either a string, or a function that takes the current item and returns a string (for live read-outs).                                                    |
 
 Compute `step_time` from the settings of the experiment where possible, for example the scope averages divided by the trigger frequency.
 
@@ -349,11 +351,11 @@ src/fcs_control/devices/
 
 The device manager creates, checks and closes devices without knowing what they are, so the class must provide:
 
-| Member               | Requirement                                                                                                                                                                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Member               | Requirement                                                                                                                                                                                                 |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `__init__(**kwargs)` | Opens the connection, using the `kwargs` from `DEVICE_CLS` (step 3). It must **raise an exception** if the device cannot be reached: the manager then marks the device as offline and logs a warning, and the application keeps running. |
-| `is_alive()`         | Returns `True` if the device still responds. The manager uses it to check whether a device is still connected, for example when an experiment is started.                                                                                |
-| `disconnect()`       | Closes the connection.                                                                                                                                                                                                                   |
+| `is_alive()`         | Returns `True` if the device still responds. The manager uses it to check whether a device is still connected, for example when an experiment is started.                                                    |
+| `disconnect()`       | Closes the connection.                                                                                                                                                                                      |
 
 Besides these, add whatever methods the experiments need to talk to the device (for example `read` for a scope).
 
@@ -378,11 +380,11 @@ DEVICE_CLS = {
 
 ##### Required entries
 
-| Key           | Description                                                   |
-| ------------- | ------------------------------------------------------------- |
-| `class`       | Device implementation class                                   |
-| `kwargs`      | Keyword arguments passed to the device constructor            |
-| `description` | Human-readable description shown in the GUI                   |
+| Key           | Description                                        |
+| ------------- | -------------------------------------------------- |
+| `class`       | Device implementation class                        |
+| `kwargs`      | Keyword arguments passed to the device constructor |
+| `description` | Human-readable description shown in the GUI        |
 | `occupied`    | Internal flag used by the device manager. Always `False` here |
 
 The key of the entry (`"device"` above) is the name used in `required_devices` and in `self.devices[...]` in experiments.
@@ -405,17 +407,17 @@ This ensures that only a single instance of each device is active throughout the
 
 `get_device()` returns the device instance, or `None` if the device is not connected. It raises a `RuntimeError` if the device is reserved by a running experiment.
 
-Inside an experiment, do not call the device manager yourself: list the key in `required_devices` and use `self.devices[...]` (see step 4 of _Adding a New Experiment_).
+Inside an experiment, do not call the device manager yourself: list the key in `required_devices` and use `self.devices[...]` (see step 4 of *Adding a New Experiment*).
 
 Other useful members of the device manager:
 
-| Member                               | Purpose                                                                                                              |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `online`                             | Dictionary of the connected devices, `{key: instance}`                                                               |
-| `offline`                            | List of the keys of devices that are not connected                                                                   |
-| `is_connected(key)`                  | Whether a specific device is connected                                                                               |
-| `refresh_status()`                   | Re-checks whether every device still responds                                                                        |
-| `connect_all()` / `disconnect_all()` | Connects or disconnects all devices that are not reserved by a running experiment                                    |
+| Member                               | Purpose                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------- |
+| `online`                             | Dictionary of the connected devices, `{key: instance}`                           |
+| `offline`                            | List of the keys of devices that are not connected                               |
+| `is_connected(key)`                  | Whether a specific device is connected                                           |
+| `refresh_status()`                   | Re-checks whether every device still responds                                    |
+| `connect_all()` / `disconnect_all()` | Connects or disconnects all devices that are not reserved by a running experiment |
 | `reserve(key)`                       | Context manager that reserves a device exclusively. Used by the `Experiment` base class, you normally do not call it |
 
 ---
@@ -425,11 +427,11 @@ Other useful members of the device manager:
 ### 1. Create environment
 
 ```bash
-conda create -n fcs-control "python>=3.12"
+conda create -n fcs-control python=3.13
 conda activate fcs-control
 ```
 
-Python 3.13 is the version the software is developed and tested with.
+The software requires Python 3.12 or newer (`requires-python` in `pyproject.toml`), and is developed and tested with Python 3.13. `pip install` refuses to install on an older version.
 
 ### 2. Install dependencies
 

@@ -13,12 +13,14 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from PySide6.QtCore import QEventLoop, QObject, QThread, Signal, Slot
+from PySide6.QtCore import QEventLoop, QObject, QThread, QTimer, Signal, Slot
 from PySide6.QtWidgets import QProgressDialog, QWidget
 
 from fcs_control.experiments._progress import PROGRESS_SCALE, ProgressTracker
 
 _logger = logging.getLogger(__name__)
+
+_REFRESH_MS = 1000   # how often the time labels are refreshed
 
 
 class _ScanWorker(QObject):
@@ -96,6 +98,11 @@ class ScanRunner(QObject):
         self._dialog.setAutoReset(False)
         self._dialog.canceled.connect(self._on_cancel)
 
+        # Keeps the elapsed/remaining time moving while a long step is running
+        self._ticker = QTimer(self)
+        self._ticker.setInterval(_REFRESH_MS)
+        self._ticker.timeout.connect(self._on_tick)
+
         self._thread = QThread()
         self._worker = _ScanWorker(scan)
         self._worker.moveToThread(self._thread)
@@ -118,7 +125,9 @@ class ScanRunner(QObject):
         loop = QEventLoop()
         self._thread.finished.connect(loop.quit)
         self._thread.start()
+        self._ticker.start()
         loop.exec()
+        self._ticker.stop()
         self._thread.wait()
 
         # Closing the dialog emits `canceled`, which is not a user abort.
@@ -131,7 +140,14 @@ class ScanRunner(QObject):
     @Slot()
     def _on_cancel(self):
         _logger.info("Abort requested")
+        self._ticker.stop()     # the dialog is hidden by the abort; do not keep updating it
         self._tracker.request_cancel()
+
+    @Slot()
+    def _on_tick(self):
+        update = self._tracker.render()
+        if update is not None:
+            self._on_progress(*update)
 
     @Slot(int, str)
     def _on_progress(self, value: int, text: str):
