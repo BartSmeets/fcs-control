@@ -75,17 +75,17 @@ class Opoopa:
         """
         self._sendnir(self._wavelength2nir(wavelength))
 
-        _logger.info(f"OPO/OPA: started moving to {wavelength} nm ({1e7/wavelength} cm⁻¹)")
+        _logger.info(f"OPO/OPA: started moving to {wavelength:.1f} nm ({1e7/wavelength:.1f} cm⁻¹)")
         start = time.monotonic()
 
         while True:
             if not self._wait():
-                _logger.info(f"OPO/OPA: finished moving to {wavelength} nm ({1e7/wavelength} cm⁻¹)")
+                _logger.info(f"OPO/OPA: finished moving to {wavelength:.1f} nm ({1e7/wavelength:.1f} cm⁻¹)")
                 return
             
             elif time.monotonic() - start > timeout:
                 raise TimeoutError(
-                    f"OPO/OPA did not reach {wavelength} nm ({1e7/wavelength} cm⁻¹) within {timeout} s"
+                    f"OPO/OPA did not reach {wavelength:.1f} nm ({1e7/wavelength:.1f} cm⁻¹) within {timeout} s"
                 )
 
             else:
