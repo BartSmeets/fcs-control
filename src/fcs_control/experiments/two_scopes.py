@@ -22,7 +22,7 @@ class IR_scan(Experiment):
     def scan(self):
         primary_sum, secondary_sum = self._read_cycles()
 
-        if primary_sum or secondary_sum is None:
+        if primary_sum is None or secondary_sum is None:
              return
         
         np.save(self.data_folder / f"{self.filename}_prime.npy", primary_sum)
@@ -59,9 +59,9 @@ class IR_scan(Experiment):
                 data_primary = primary.read('CH1')
                 data_secondary = secondary.read('CH1')
 
-                if primary_sum and secondary_sum is None:
-                     primary_sum = data_primary
-                     secondary_sum = data_secondary
+                if primary_sum is None and secondary_sum is None:
+                    primary_sum = data_primary
+                    secondary_sum = data_secondary
                 else:
                     primary_sum[:, 1] += data_primary[:, 1]
                     secondary_sum[:, 1] += data_secondary[:, 1]
