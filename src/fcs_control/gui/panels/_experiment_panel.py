@@ -44,6 +44,7 @@ class ExperimentPanel(QGroupBox):
         self.experiment_combo = QComboBox(self)
         self.experiment_combo.addItems(list(EXPERIMENT_REGISTRY.keys()))
         self.experiment_combo.currentTextChanged.connect(self._on_experiment_change)
+        self.experiment_combo.setCurrentIndex(list(EXPERIMENT_REGISTRY.keys()).index("Record RTOF"))    # Set default experiment
 
         # Experiment Widgets
         SelectedExperiment = EXPERIMENT_REGISTRY[self.experiment_combo.currentText()]
